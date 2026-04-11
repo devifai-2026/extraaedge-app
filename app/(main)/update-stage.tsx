@@ -1,0 +1,722 @@
+import { Theme } from '@/constants/theme';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Calendar } from 'react-native-calendars';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import {
+  Appbar,
+  Divider,
+  List,
+  Modal,
+  Portal,
+  Searchbar,
+  Text,
+} from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+// ─── Options ─────────────────────────────────────────────────────────────────
+
+const STAGE_OPTIONS = [
+  '08 Visit Scheduled',
+  '09 Visited',
+  '10 Enrolled',
+  '11 Junk',
+  '12 Cold',
+];
+
+const LEAD_REASON_OPTIONS = [
+  'Attend Demo',
+  'Not Interested',
+  'Status Pending',
+  'Will Attend Demo',
+  'Will Join Later',
+  'Will Join Soon',
+];
+
+
+// ─── SelectModal ─────────────────────────────────────────────────────────────
+
+interface SelectModalProps {
+  visible: boolean;
+  onDismiss: () => void;
+  title: string;
+  options: string[];
+  selected: string;
+  onSelect: (value: string) => void;
+}
+
+function SelectModal({
+  visible, onDismiss, title, options, selected, onSelect,
+}: SelectModalProps) {
+  const insets = useSafeAreaInsets();
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    if (!visible) setSearch('');
+  }, [visible]);
+
+  const filtered = useMemo(
+    () => options.filter(o => o.toLowerCase().includes(search.toLowerCase())),
+    [options, search],
+  );
+
+  const handleSelect = (value: string) => {
+    onSelect(value);
+    onDismiss();
+  };
+
+  return (
+    <Portal>
+      <Modal
+        visible={visible}
+        onDismiss={onDismiss}
+        contentContainerStyle={[styles.bottomSheet, { paddingBottom: insets.bottom + 16 }]}
+      >
+        <View style={styles.dragHandle} />
+        <Text style={styles.sheetTitle}>{title}</Text>
+        <Divider />
+        <View style={styles.sheetSearchWrap}>
+          <Searchbar
+            placeholder="Search..."
+            value={search}
+            onChangeText={setSearch}
+            style={styles.sheetSearchbar}
+            inputStyle={styles.sheetSearchInput}
+            iconColor={Theme.colors.primary}
+          />
+        </View>
+        <ScrollView style={styles.sheetList} showsVerticalScrollIndicator={false}>
+          {filtered.map(option => (
+            <Pressable
+              key={option}
+              style={({ pressed }) => [
+                styles.optionRow,
+                selected === option && styles.optionRowSelected,
+                pressed && styles.optionRowPressed,
+              ]}
+              android_ripple={{ color: 'rgba(229,57,53,0.07)' }}
+              onPress={() => handleSelect(option)}
+            >
+              <Text
+                style={[
+                  styles.optionText,
+                  selected === option && styles.optionTextSelected,
+                ]}
+              >
+                {option}
+              </Text>
+              {selected === option && (
+                <MaterialCommunityIcons
+                  name="check-circle"
+                  size={20}
+                  color={Theme.colors.primary}
+                />
+              )}
+            </Pressable>
+          ))}
+          {filtered.length === 0 && (
+            <Text style={styles.noResults}>No results found</Text>
+          )}
+        </ScrollView>
+      </Modal>
+    </Portal>
+  );
+}
+
+// ─── DatePickerModal ──────────────────────────────────────────────────────────
+
+interface DatePickerModalProps {
+  visible: boolean;
+  onDismiss: () => void;
+  selectedDate: string; // "DD/MM/YYYY"
+  onSelectDate: (dateStr: string) => void;
+}
+
+function DatePickerModal({
+  visible, onDismiss, selectedDate, onSelectDate,
+}: DatePickerModalProps) {
+  const insets = useSafeAreaInsets();
+
+  // Convert DD/MM/YYYY  ↔  YYYY-MM-DD (react-native-calendars format)
+  const toCalDate = (ddmmyyyy: string): string => {
+    if (!ddmmyyyy) return '';
+    const [d, m, y] = ddmmyyyy.split('/');
+    if (!d || !m || !y) return '';
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  };
+
+  const toDisplayDate = (yyyymmdd: string): string => {
+    const [y, m, d] = yyyymmdd.split('-');
+    return `${d}/${m}/${y}`;
+  };
+
+  const todayDate = new Date();
+  const todayCalStr = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-${String(todayDate.getDate()).padStart(2, '0')}`;
+
+  const calSelected = toCalDate(selectedDate);
+  const markedDates = calSelected
+    ? { [calSelected]: { selected: true, selectedColor: Theme.colors.primary } }
+    : {};
+
+  return (
+    <Portal>
+      <Modal
+        visible={visible}
+        onDismiss={onDismiss}
+        contentContainerStyle={[styles.bottomSheet, styles.calSheet, { paddingBottom: insets.bottom + 20 }]}
+      >
+        <View style={styles.dragHandle} />
+        <Text style={styles.sheetTitle}>Select Date</Text>
+        <Divider style={{ marginBottom: 8 }} />
+
+        <Calendar
+          current={calSelected || todayCalStr}
+          markedDates={markedDates}
+          onDayPress={(day) => onSelectDate(toDisplayDate(day.dateString))}
+          theme={{
+            arrowColor: Theme.colors.primary,
+            selectedDayBackgroundColor: Theme.colors.primary,
+            selectedDayTextColor: '#FFFFFF',
+            todayTextColor: Theme.colors.primary,
+            dotColor: Theme.colors.primary,
+            textDayFontWeight: '600',
+            textMonthFontWeight: '800',
+            textDayHeaderFontWeight: '700',
+          }}
+          style={styles.calendarWidget}
+        />
+
+        <TouchableOpacity
+          style={styles.todayBtn}
+          onPress={() => {
+            const d = String(todayDate.getDate()).padStart(2, '0');
+            const m = String(todayDate.getMonth() + 1).padStart(2, '0');
+            onSelectDate(`${d}/${m}/${todayDate.getFullYear()}`);
+          }}
+          activeOpacity={0.75}
+        >
+          <Text style={styles.todayBtnText}>Today</Text>
+        </TouchableOpacity>
+      </Modal>
+    </Portal>
+  );
+}
+
+// ─── UpdateStageScreen ────────────────────────────────────────────────────────
+
+interface FormErrors {
+  stage?: string;
+  reason?: string;
+  date?: string;
+}
+
+export default function UpdateStageScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
+
+  const lead = useMemo(() => {
+    try {
+      return params.leadData ? JSON.parse(params.leadData as string) : null;
+    } catch {
+      return null;
+    }
+  }, [params.leadData]);
+
+  const [stage, setStage] = useState('09 Visited');
+  const [leadReason, setLeadReason] = useState('');
+  const [followupDate, setFollowupDate] = useState('');
+  const [remarks, setRemarks] = useState('');
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  const [stageModalVisible, setStageModalVisible] = useState(false);
+  const [reasonModalVisible, setReasonModalVisible] = useState(false);
+  const [dateModalVisible, setDateModalVisible] = useState(false);
+
+  const validate = (): boolean => {
+    const newErrors: FormErrors = {};
+    if (!stage) newErrors.stage = 'Stage is required';
+    if (!leadReason) newErrors.reason = 'Lead reason is required';
+    if (!followupDate) newErrors.date = 'Followup date is required';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleUpdate = () => {
+    if (validate()) {
+      // TODO: dispatch API call
+      console.log('Update Stage Payload:', { stage, leadReason, followupDate, remarks });
+      router.back();
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* ── Header ── */}
+      <Appbar.Header style={styles.header} elevated>
+        <Appbar.BackAction
+          onPress={() => router.back()}
+          color={Theme.colors.secondary}
+        />
+        <Appbar.Content title="Update Stage" titleStyle={styles.headerTitle} />
+        <TouchableOpacity
+          style={styles.updateBtn}
+          onPress={handleUpdate}
+          activeOpacity={0.82}
+        >
+          <Text style={styles.updateBtnText}>Update</Text>
+        </TouchableOpacity>
+      </Appbar.Header>
+
+      {/* ── Lead name badge ── */}
+      {lead?.name && (
+        <View style={styles.leadNameBar}>
+          <View style={styles.leadAvatarSmall}>
+            <Text style={styles.leadAvatarText}>
+              {lead.name.substring(0, 2).toUpperCase()}
+            </Text>
+          </View>
+          <Text style={styles.leadNameText}>{lead.name}</Text>
+        </View>
+      )}
+
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+
+          {/* ── SECTION 1 : Stage ── */}
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionAccent} />
+              <Text style={styles.sectionLabel}>Stage Information</Text>
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>
+                Stage <Text style={styles.required}>*</Text>
+              </Text>
+              <TouchableOpacity
+                style={[styles.selectField, errors.stage && styles.fieldError]}
+                onPress={() => {
+                  setErrors(e => ({ ...e, stage: undefined }));
+                  setStageModalVisible(true);
+                }}
+                activeOpacity={0.75}
+              >
+                <Text style={[styles.selectText, !stage && styles.placeholderText]}>
+                  {stage || 'Select Stage'}
+                </Text>
+                <MaterialCommunityIcons name="chevron-down" size={22} color="#9E9E9E" />
+              </TouchableOpacity>
+              {errors.stage && <Text style={styles.errorText}>{errors.stage}</Text>}
+            </View>
+
+            {/* ── SECTION 2 : Lead Reason ── */}
+            <View style={[styles.fieldGroup, { marginBottom: 0 }]}>
+              <Text style={styles.fieldLabel}>
+                Select Lead Reason <Text style={styles.required}>*</Text>
+              </Text>
+              <TouchableOpacity
+                style={[styles.selectField, errors.reason && styles.fieldError]}
+                onPress={() => {
+                  setErrors(e => ({ ...e, reason: undefined }));
+                  setReasonModalVisible(true);
+                }}
+                activeOpacity={0.75}
+              >
+                <Text style={[styles.selectText, !leadReason && styles.placeholderText]}>
+                  {leadReason || 'Select Lead Reason'}
+                </Text>
+                <MaterialCommunityIcons name="chevron-down" size={22} color="#9E9E9E" />
+              </TouchableOpacity>
+              {errors.reason && <Text style={styles.errorText}>{errors.reason}</Text>}
+            </View>
+          </View>
+
+          {/* ── SECTION 3 : Follow-up Date ── */}
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionAccent} />
+              <Text style={styles.sectionLabel}>Followup Details</Text>
+            </View>
+
+            <View style={[styles.fieldGroup, { marginBottom: 0 }]}>
+              <Text style={styles.fieldLabel}>
+                Followup Date <Text style={styles.required}>*</Text>
+              </Text>
+              <TouchableOpacity
+                style={[styles.selectField, errors.date && styles.fieldError]}
+                onPress={() => {
+                  setErrors(e => ({ ...e, date: undefined }));
+                  setDateModalVisible(true);
+                }}
+                activeOpacity={0.75}
+              >
+                <Text style={[styles.selectText, !followupDate && styles.placeholderText]}>
+                  {followupDate || 'DD/MM/YYYY'}
+                </Text>
+                <MaterialCommunityIcons name="calendar-outline" size={22} color="#9E9E9E" />
+              </TouchableOpacity>
+              {errors.date && <Text style={styles.errorText}>{errors.date}</Text>}
+            </View>
+          </View>
+
+          {/* ── SECTION 4 : Remarks ── */}
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionAccent} />
+              <Text style={styles.sectionLabel}>Additional Notes</Text>
+            </View>
+
+            <View style={[styles.fieldGroup, { marginBottom: 0 }]}>
+              <Text style={styles.fieldLabel}>Remarks</Text>
+              <TextInput
+                style={styles.textArea}
+                multiline
+                numberOfLines={5}
+                placeholder="Enter remarks here..."
+                placeholderTextColor="#BDBDBD"
+                value={remarks}
+                onChangeText={setRemarks}
+                textAlignVertical="top"
+              />
+            </View>
+          </View>
+
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      {/* ── Modals ── */}
+      <SelectModal
+        visible={stageModalVisible}
+        onDismiss={() => setStageModalVisible(false)}
+        title="Select Stage"
+        options={STAGE_OPTIONS}
+        selected={stage}
+        onSelect={setStage}
+      />
+      <SelectModal
+        visible={reasonModalVisible}
+        onDismiss={() => setReasonModalVisible(false)}
+        title="Select Lead Reason"
+        options={LEAD_REASON_OPTIONS}
+        selected={leadReason}
+        onSelect={setLeadReason}
+      />
+      <DatePickerModal
+        visible={dateModalVisible}
+        onDismiss={() => setDateModalVisible(false)}
+        selectedDate={followupDate}
+        onSelectDate={(dateStr) => {
+          setFollowupDate(dateStr);
+          setDateModalVisible(false);
+        }}
+      />
+    </SafeAreaView>
+  );
+}
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F6F8',
+  },
+
+  // ── Header ──
+  header: {
+    backgroundColor: '#FFFFFF',
+    elevation: 4,
+  },
+  headerTitle: {
+    fontWeight: '800',
+    fontSize: 20,
+    color: Theme.colors.secondary,
+  },
+  updateBtn: {
+    backgroundColor: Theme.colors.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 9,
+    borderRadius: 22,
+    marginRight: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: Theme.colors.primary,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.4,
+        shadowRadius: 6,
+      },
+      android: { elevation: 4 },
+    }),
+  },
+  updateBtnText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 14,
+    letterSpacing: 0.3,
+  },
+
+  // ── Lead Name Bar ──
+  leadNameBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+    gap: 12,
+  },
+  leadAvatarSmall: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: Theme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  leadAvatarText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  leadNameText: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: Theme.colors.secondary,
+    letterSpacing: -0.2,
+  },
+
+  // ── Scroll ──
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 48,
+    gap: 14,
+  },
+
+  // ── Section Card ──
+  sectionCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 18,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 6,
+      },
+      android: { elevation: 2 },
+    }),
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 18,
+    gap: 10,
+  },
+  sectionAccent: {
+    width: 4,
+    height: 18,
+    borderRadius: 2,
+    backgroundColor: Theme.colors.primary,
+  },
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#9E9E9E',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+
+  // ── Field ──
+  fieldGroup: {
+    marginBottom: 18,
+  },
+  fieldLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#111111',
+    marginBottom: 8,
+  },
+  required: {
+    color: Theme.colors.primary,
+    fontWeight: '800',
+  },
+  selectField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F5F6F8',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#EEEEEE',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    minHeight: 52,
+  },
+  fieldError: {
+    borderColor: Theme.colors.primary,
+    backgroundColor: 'rgba(229,57,53,0.04)',
+  },
+  selectText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#111111',
+    marginRight: 8,
+  },
+  placeholderText: {
+    color: '#BDBDBD',
+    fontWeight: '500',
+  },
+  errorText: {
+    marginTop: 6,
+    fontSize: 12,
+    color: Theme.colors.primary,
+    fontWeight: '600',
+  },
+  textArea: {
+    backgroundColor: '#F5F6F8',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#EEEEEE',
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 14,
+    fontSize: 15,
+    color: '#111111',
+    minHeight: 120,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
+
+  // ── Bottom Sheet ──
+  bottomSheet: {
+    backgroundColor: '#FFFFFF',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+      },
+      android: { elevation: 16 },
+    }),
+  },
+  calSheet: {
+    paddingHorizontal: 16,
+  },
+  dragHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E0E0E0',
+    alignSelf: 'center',
+    marginBottom: 14,
+  },
+  sheetTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#000000',
+    textAlign: 'center',
+    marginBottom: 14,
+    letterSpacing: -0.2,
+  },
+  sheetSearchWrap: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  sheetSearchbar: {
+    borderRadius: 12,
+    backgroundColor: '#F5F6F8',
+    elevation: 0,
+    height: 46,
+  },
+  sheetSearchInput: {
+    fontSize: 14,
+  },
+  sheetList: {
+    maxHeight: 340,
+  },
+
+  // ── Option Row ──
+  optionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+  },
+  optionRowSelected: {
+    backgroundColor: 'rgba(229,57,53,0.06)',
+  },
+  optionRowPressed: {
+    backgroundColor: 'rgba(229,57,53,0.04)',
+  },
+  optionText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#111111',
+    flex: 1,
+  },
+  optionTextSelected: {
+    color: Theme.colors.primary,
+    fontWeight: '700',
+  },
+  noResults: {
+    textAlign: 'center',
+    color: '#9E9E9E',
+    fontSize: 14,
+    paddingVertical: 24,
+  },
+
+  // ── Calendar ──
+  calendarWidget: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  todayBtn: {
+    marginTop: 14,
+    marginHorizontal: 16,
+    paddingVertical: 13,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: Theme.colors.primary,
+    alignItems: 'center',
+  },
+  todayBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Theme.colors.primary,
+    letterSpacing: 0.3,
+  },
+});

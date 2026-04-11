@@ -1,0 +1,655 @@
+import { Theme } from '@/constants/theme';
+import LeadActionDrawer, { LeadItem } from '@/components/LeadActionDrawer';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { DrawerActions, useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  FlatList,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import {
+  Appbar,
+  Avatar,
+  Button,
+  Card,
+  Divider,
+  FAB,
+  IconButton,
+  List,
+  Modal,
+  Portal,
+  Searchbar,
+  Text
+} from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+// Status filter categories
+const STATUS_FILTERS = [
+  'All',
+  'Untouched',
+  'Unspoken',
+  'FollowUp',
+  'Demo Prospect',
+  'Engaged Leads',
+  'Interested',
+  'Demo Attended',
+  'Scheduled Visit',
+  'Visited',
+  'Enrolled',
+  'Junk',
+  'Cold',
+  'Re-enquired'
+];
+
+// Dummy leads data
+const LEADS_DATA: LeadItem[] = [
+  { id: '1', name: 'Rahul Sharma', mobile: '+91 98765 43210', date: '20/01/2026 10:47:51 AM', visited: 0, followup: '09/04/2026 10:58:00 AM', source: 'Website', leadAge: '81 days', program: 'MBA' },
+  { id: '2', name: 'Priya Verma', mobile: '+91 87654 32109', date: '19/01/2026 11:30:12 AM', visited: 1, followup: '10/04/2026 09:00:00 AM', source: 'Facebook', leadAge: '82 days', program: 'Data Science' },
+  { id: '3', name: 'Amit Kumar', mobile: '+91 76543 21098', date: '18/01/2026 02:15:44 PM', visited: 0, followup: '08/04/2026 11:30:00 AM', source: 'Google Ads', leadAge: '83 days', program: 'Web Development' },
+  { id: '4', name: 'Sneha Gupta', mobile: '+91 65432 10987', date: '17/01/2026 09:00:00 AM', visited: 2, followup: '11/04/2026 04:00:00 PM', source: 'Instagram', leadAge: '84 days', program: 'Digital Marketing' },
+  { id: '5', name: 'Vikram Singh', mobile: '+91 54321 09876', date: '16/01/2026 03:45:22 PM', visited: 0, followup: '12/04/2026 10:00:00 AM', source: 'Direct', leadAge: '85 days', program: 'Product Management' },
+  { id: '6', name: 'Ananya Roy', mobile: '+91 43210 98765', date: '15/01/2026 12:20:11 PM', visited: 1, followup: '15/04/2026 02:30:00 PM', source: 'Referral', leadAge: '86 days', program: 'UX Design' },
+];
+
+export default function LeadsScreen() {
+  const navigation = useNavigation();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const [viewType, setViewType] = useState('list'); // 'list', 'grid', 'compact'
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dataset, setDataset] = useState('Lead');
+  const [searchType, setSearchType] = useState('Applicant Name');
+  const [selectedStatus, setSelectedStatus] = useState('All');
+
+  // Lead action drawer
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<LeadItem | null>(null);
+
+  const openLeadDrawer = (lead: LeadItem) => {
+    setSelectedLead(lead);
+    setDrawerVisible(true);
+  };
+
+  // Sheet visible states
+  const [datasetSheetVisible, setDatasetSheetVisible] = useState(false);
+  const [searchTypeSheetVisible, setSearchTypeSheetVisible] = useState(false);
+  const [filterSheetVisible, setFilterSheetVisible] = useState(false);
+
+  const renderLeadItem = ({ item }: { item: typeof LEADS_DATA[0] }) => {
+    if (viewType === 'grid') {
+      return (
+        <TouchableOpacity activeOpacity={0.75} onPress={() => openLeadDrawer(item)}>
+          <Card style={styles.gridCard}>
+            <View style={styles.gridCardContent}>
+              <Avatar.Text
+                label={item.name.substring(0, 2).toUpperCase()}
+                size={48}
+                style={styles.gridAvatar}
+                color="#FFFFFF"
+              />
+              <Text style={styles.gridName} numberOfLines={1}>{item.name}</Text>
+              <Text style={styles.gridMobile}>{item.mobile}</Text>
+              <View style={styles.gridActions}>
+                <IconButton icon="phone-outline" iconColor={Theme.colors.primary} size={20} />
+                <IconButton icon="message-outline" iconColor="#555555" size={20} />
+              </View>
+            </View>
+          </Card>
+        </TouchableOpacity>
+      );
+    }
+
+    return (
+      <TouchableOpacity activeOpacity={0.75} onPress={() => openLeadDrawer(item)}>
+      <Card style={styles.leadCard}>
+        <View style={styles.cardRow}>
+          {/* Left Avatar */}
+          <Avatar.Text
+            label={item.name.substring(0, 2).toUpperCase()}
+            size={50}
+            style={styles.avatar}
+            color="#FFFFFF"
+          />
+
+          {/* Center Content */}
+          <View style={styles.cardInfo}>
+            <Text style={styles.leadName}>{item.name}</Text>
+            <Text style={styles.leadMobile}>{item.mobile}</Text>
+            <Text style={styles.metaData}>{item.date}</Text>
+
+            <View style={styles.flagRow}>
+              <MaterialCommunityIcons name="map-marker-outline" size={14} color="#666" />
+              <Text style={styles.flagText}>Visited: {item.visited}</Text>
+            </View>
+
+            <View style={styles.followupRow}>
+              <MaterialCommunityIcons name="calendar-clock-outline" size={14} color={Theme.colors.primary} />
+              <Text style={styles.followupText}>{item.followup}</Text>
+            </View>
+          </View>
+
+          {/* Right Actions */}
+          <View style={styles.cardActions}>
+            <IconButton
+              icon="phone"
+              mode="contained"
+              containerColor={Theme.colors.primary}
+              iconColor="#FFFFFF"
+              size={22}
+              onPress={() => { }}
+            />
+            <IconButton
+              icon="whatsapp"
+              mode="outlined"
+              iconColor="#25D366"
+              size={22}
+              style={{ borderColor: '#E0E0E0' }}
+              onPress={() => { }}
+            />
+          </View>
+        </View>
+      </Card>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderBottomSheet = (
+    visible: boolean,
+    onDismiss: () => void,
+    title: string,
+    children: React.ReactNode
+  ) => (
+    <Portal>
+      <Modal
+        visible={visible}
+        onDismiss={onDismiss}
+        contentContainerStyle={[styles.bottomSheet, { paddingBottom: insets.bottom + 20 }]}
+      >
+        <View style={styles.dragHandle} />
+        <Text style={styles.modalTitle}>{title}</Text>
+        <Divider />
+        <ScrollView style={styles.sheetContent}>
+          {children}
+        </ScrollView>
+      </Modal>
+    </Portal>
+  );
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Top Navigation Bar */}
+      <Appbar.Header style={styles.header} elevated>
+        <Appbar.Action
+          icon="menu"
+          onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
+        />
+        <Appbar.Content title="Leads" titleStyle={styles.headerTitle} />
+        <Appbar.Action icon="phone-outline" onPress={() => { }} />
+        <Appbar.Action icon="bell-outline" onPress={() => { }} />
+      </Appbar.Header>
+
+      {/* Search and Dataset Section */}
+      <View style={styles.searchRow}>
+        {!isSearching ? (
+          <TouchableOpacity
+            style={styles.datasetSelector}
+            onPress={() => setDatasetSheetVisible(true)}
+          >
+            <Text style={styles.datasetLabel}>{dataset}</Text>
+            <MaterialCommunityIcons name="chevron-down" size={20} color="#000" />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={styles.searchTypeSelector}
+            onPress={() => setSearchTypeSheetVisible(true)}
+          >
+            <Text style={styles.searchTypeLabel} numberOfLines={1}>{searchType}</Text>
+            <MaterialCommunityIcons name="chevron-down" size={18} color="#000" />
+          </TouchableOpacity>
+        )}
+
+        <View style={styles.rightIcons}>
+          <IconButton
+            icon={isSearching ? "close" : "magnify"}
+            size={24}
+            onPress={() => setIsSearching(!isSearching)}
+          />
+          <IconButton
+            icon="view-list"
+            size={24}
+            iconColor={viewType === 'list' ? Theme.colors.primary : "#999"}
+            onPress={() => setViewType('list')}
+          />
+          <IconButton
+            icon="view-grid"
+            size={24}
+            iconColor={viewType === 'grid' ? Theme.colors.primary : "#999"}
+            onPress={() => setViewType('grid')}
+          />
+          <IconButton
+            icon="view-comfy"
+            size={24}
+            iconColor={viewType === 'compact' ? Theme.colors.primary : "#999"}
+            onPress={() => setViewType('compact')}
+          />
+        </View>
+      </View>
+
+      {isSearching && (
+        <View style={styles.searchBarContainer}>
+          <Searchbar
+            placeholder="Search leads..."
+            onChangeText={setSearchQuery}
+            value={searchQuery}
+            style={styles.searchBar}
+            inputStyle={styles.searchBarInput}
+            iconColor={Theme.colors.primary}
+          />
+        </View>
+      )}
+
+      {/* Horizontal Status Chips */}
+      <View style={styles.statusChipsContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.statusChipsScroll}
+        >
+          {STATUS_FILTERS.map((status) => (
+            <TouchableOpacity
+              key={status}
+              style={[
+                styles.statusChip,
+                selectedStatus === status && styles.activeStatusChip
+              ]}
+              onPress={() => setSelectedStatus(status)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.statusChipText,
+                  selectedStatus === status && styles.activeStatusChipText
+                ]}
+              >
+                {status}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* Count and Filter Row */}
+      <View style={styles.countRow}>
+        <Text style={styles.countText}>1500 Leads</Text>
+        <Button
+          mode="text"
+          icon="filter-variant"
+          labelStyle={styles.filterBtnLabel}
+          onPress={() => setFilterSheetVisible(true)}
+        >
+          Sort / Filter
+        </Button>
+      </View>
+
+      {/* Lead List */}
+      <FlatList
+        data={LEADS_DATA}
+        renderItem={renderLeadItem}
+        keyExtractor={item => item.id}
+        numColumns={viewType === 'grid' ? 2 : 1}
+        key={viewType === 'grid' ? 'grid' : 'list'}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+      />
+
+      {/* Floating Action Button */}
+      <FAB
+        icon="plus"
+        style={styles.fab}
+        color="#FFFFFF"
+        onPress={() => console.log('Add Lead')}
+      />
+
+      {/* Bottom Sheets */}
+      {renderBottomSheet(
+        datasetSheetVisible,
+        () => setDatasetSheetVisible(false),
+        "Select Dataset",
+        <>
+          <List.Item
+            title="Lead"
+            onPress={() => { setDataset('Lead'); setDatasetSheetVisible(false); }}
+            right={() => dataset === 'Lead' && <List.Icon icon="check" color={Theme.colors.primary} />}
+          />
+          <List.Item
+            title="Rawdata"
+            onPress={() => { setDataset('Rawdata'); setDatasetSheetVisible(false); }}
+            right={() => dataset === 'Rawdata' && <List.Icon icon="check" color={Theme.colors.primary} />}
+          />
+        </>
+      )}
+
+      {renderBottomSheet(
+        searchTypeSheetVisible,
+        () => setSearchTypeSheetVisible(false),
+        "Search Type",
+        <>
+          {['Basic Search', 'Applicant Name', 'WhatsApp Number', 'Email ID'].map((type) => (
+            <List.Item
+              key={type}
+              title={type}
+              onPress={() => { setSearchType(type); setSearchTypeSheetVisible(false); }}
+              right={() => searchType === type && <List.Icon icon="check" color={Theme.colors.primary} />}
+            />
+          ))}
+        </>
+      )}
+
+      {renderBottomSheet(
+        filterSheetVisible,
+        () => setFilterSheetVisible(false),
+        "Filters",
+        <>
+          <List.Item title="Date Filter" left={() => <List.Icon icon="calendar" />} />
+          <List.Item title="Lead Status" left={() => <List.Icon icon="tag-outline" />} />
+          <List.Item title="Lead Source" left={() => <List.Icon icon="source-branch" />} />
+          <List.Item title="Followup Pending" left={() => <List.Icon icon="clock-alert-outline" />} />
+          <View style={styles.sheetFooter}>
+            <Button
+              mode="contained"
+              style={styles.applyBtn}
+              onPress={() => setFilterSheetVisible(false)}
+            >
+              Apply Filters
+            </Button>
+          </View>
+        </>
+      )}
+
+      {/* Lead action bottom drawer */}
+      <LeadActionDrawer
+        visible={drawerVisible}
+        lead={selectedLead}
+        onDismiss={() => setDrawerVisible(false)}
+        onAction={(action, lead) => {
+          if (action === 'edit') {
+            router.push({
+              pathname: '/(main)/edit-lead',
+              params: { leadData: JSON.stringify(lead) },
+            });
+          } else if (action === 'stage') {
+            router.push({
+              pathname: '/(main)/update-stage',
+              params: { leadData: JSON.stringify(lead) },
+            });
+          } else {
+            console.log('Action:', action, 'Lead:', lead.name);
+          }
+        }}
+      />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
+  },
+  header: {
+    backgroundColor: '#FFFFFF',
+    elevation: 4,
+  },
+  headerTitle: {
+    fontWeight: '800',
+    fontSize: 22,
+    color: '#000000',
+  },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#FFFFFF',
+  },
+  datasetSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F1F3F5',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  datasetLabel: {
+    fontWeight: '700',
+    fontSize: 16,
+    marginRight: 4,
+  },
+  searchTypeSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F1F3F5',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    maxWidth: '40%',
+  },
+  searchTypeLabel: {
+    fontWeight: '700',
+    fontSize: 14,
+    marginRight: 4,
+  },
+  rightIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  searchBarContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  searchBar: {
+    borderRadius: 12,
+    height: 48,
+    backgroundColor: '#F1F3F5',
+    elevation: 0,
+  },
+  searchBarInput: {
+    fontSize: 15,
+  },
+  countRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  statusChipsContainer: {
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F3F5',
+  },
+  statusChipsScroll: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  statusChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F8F9FA',
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
+  },
+  activeStatusChip: {
+    backgroundColor: Theme.colors.primary,
+    borderColor: Theme.colors.primary,
+  },
+  statusChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#495057',
+  },
+  activeStatusChipText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  countText: {
+    fontSize: 14,
+    color: '#666666',
+    fontWeight: '600',
+  },
+  filterBtnLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Theme.colors.primary,
+  },
+  listContent: {
+    padding: 12,
+    paddingBottom: 100,
+  },
+  leadCard: {
+    marginBottom: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  cardRow: {
+    flexDirection: 'row',
+    padding: 16,
+    alignItems: 'center',
+  },
+  avatar: {
+    backgroundColor: Theme.colors.primary,
+  },
+  cardInfo: {
+    flex: 1,
+    marginLeft: 16,
+  },
+  leadName: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#000000',
+  },
+  leadMobile: {
+    fontSize: 14,
+    color: '#495057',
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  metaData: {
+    fontSize: 12,
+    color: '#868E96',
+    marginTop: 4,
+  },
+  flagRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  flagText: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 4,
+    fontWeight: '500',
+  },
+  followupRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  followupText: {
+    fontSize: 12,
+    color: Theme.colors.primary,
+    fontWeight: '700',
+    marginLeft: 4,
+  },
+  cardActions: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  gridCard: {
+    flex: 1,
+    margin: 6,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+  },
+  gridCardContent: {
+    padding: 16,
+    alignItems: 'center',
+  },
+  gridAvatar: {
+    backgroundColor: Theme.colors.primary,
+    marginBottom: 10,
+  },
+  gridName: {
+    fontSize: 15,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  gridMobile: {
+    fontSize: 13,
+    color: '#666',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  gridActions: {
+    flexDirection: 'row',
+    marginTop: 10,
+    justifyContent: 'center',
+  },
+  fab: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 0,
+    backgroundColor: Theme.colors.primary,
+    borderRadius: 30,
+    elevation: 6,
+  },
+  bottomSheet: {
+    backgroundColor: 'white',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 12,
+  },
+  dragHandle: {
+    width: 40,
+    height: 5,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 3,
+    alignSelf: 'center',
+    marginBottom: 12,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 16,
+    textAlign: 'center',
+    color: '#000',
+  },
+  sheetContent: {
+    maxHeight: 400,
+  },
+  sheetFooter: {
+    padding: 16,
+  },
+  applyBtn: {
+    backgroundColor: Theme.colors.primary,
+    borderRadius: 12,
+    paddingVertical: 4,
+  }
+});

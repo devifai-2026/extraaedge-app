@@ -1,53 +1,102 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+/**
+ * Enterprise Theme System for ExtraaEdge CRM
+ * Primary color change here will cascade across all themed components.
+ */
 
-export const Colors = {
-  light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+const PRIMARY_RED = '#E53935';
+const SECONDARY_BLACK = '#000000';
+const WHITE = '#FFFFFF';
+const GREY_LIGHT = '#F5F5F5';
+const GREY_MEDIUM = '#BDBDBD';
+const GREY_DARK = '#757575';
+
+export const Theme = {
+  colors: {
+    primary: PRIMARY_RED,
+    secondary: SECONDARY_BLACK,
+    background: WHITE,
+    surface: WHITE,
+    text: {
+      primary: '#11181C',
+      secondary: GREY_DARK,
+      inverse: WHITE,
+      muted: GREY_MEDIUM,
+    },
+    input: {
+      background: GREY_LIGHT,
+      border: '#EEEEEE',
+      text: SECONDARY_BLACK,
+      placeholder: GREY_MEDIUM,
+    },
+    navigation: {
+      active: PRIMARY_RED,
+      inactive: GREY_MEDIUM,
+      background: WHITE,
+    },
+    status: {
+      success: '#4CAF50',
+      error: '#F44336',
+      warning: '#FFC107',
+      info: '#2196F3',
+    }
   },
-  dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+  spacing: {
+    xs: 4,
+    sm: 8,
+    md: 16,
+    lg: 24,
+    xl: 32,
+    xxl: 48,
   },
+  radius: {
+    sm: 8,
+    md: 12,
+    lg: 16,
+    xl: 24,
+    full: 9999,
+  },
+  shadows: Platform.select({
+    ios: {
+      sm: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+      },
+      md: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+    },
+    android: {
+      sm: { elevation: 2 },
+      md: { elevation: 5 },
+    },
+    default: {},
+  }),
 };
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
+// Maintaining backward compatibility if needed for existing components
+export const Colors = {
+  light: {
+    text: Theme.colors.text.primary,
+    background: Theme.colors.background,
+    tint: Theme.colors.primary,
+    icon: Theme.colors.text.secondary,
+    tabIconDefault: Theme.colors.navigation.inactive,
+    tabIconSelected: Theme.colors.navigation.active,
   },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
+  dark: {
+    // Basic dark mode fallbacks
+    text: '#ECEDEE',
+    background: '#151718',
+    tint: '#FFFFFF',
+    icon: '#9BA1A6',
+    tabIconDefault: '#9BA1A6',
+    tabIconSelected: '#FFFFFF',
   },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-  },
-});
+};
