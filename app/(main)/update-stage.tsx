@@ -1,8 +1,8 @@
 import { Theme } from '@/constants/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Calendar } from 'react-native-calendars';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -134,6 +134,21 @@ function SelectModal({
   );
 }
 
+// ─── Date format helpers ──────────────────────────────────────────────────────
+
+function parseDate(s: string): Date {
+  if (!s) return new Date();
+  const [d, m, y] = s.split('/');
+  if (!d || !m || !y) return new Date();
+  return new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+}
+
+function formatDate(date: Date): string {
+  const d = String(date.getDate()).padStart(2, '0');
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  return `${d}/${m}/${date.getFullYear()}`;
+}
+
 // ─── DatePickerModal ──────────────────────────────────────────────────────────
 
 interface DatePickerModalProps {
@@ -143,71 +158,66 @@ interface DatePickerModalProps {
   onSelectDate: (dateStr: string) => void;
 }
 
-function DatePickerModal({
-  visible, onDismiss, selectedDate, onSelectDate,
-}: DatePickerModalProps) {
+function DatePickerModal({ visible, onDismiss, selectedDate, onSelectDate }: DatePickerModalProps) {
   const insets = useSafeAreaInsets();
+  const [tempDate, setTempDate] = useState<Date>(() => parseDate(selectedDate));
 
-  // Convert DD/MM/YYYY  ↔  YYYY-MM-DD (react-native-calendars format)
-  const toCalDate = (ddmmyyyy: string): string => {
-    if (!ddmmyyyy) return '';
-    const [d, m, y] = ddmmyyyy.split('/');
-    if (!d || !m || !y) return '';
-    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-  };
+  useEffect(() => {
+    if (visible) setTempDate(parseDate(selectedDate));
+  }, [visible]);
 
-  const toDisplayDate = (yyyymmdd: string): string => {
-    const [y, m, d] = yyyymmdd.split('-');
-    return `${d}/${m}/${y}`;
-  };
+  // ── Android: native dialog ──
+  if (Platform.OS === 'android') {
+    if (!visible) return null;
+    return (
+      <DateTimePicker
+        value={parseDate(selectedDate)}
+        mode="date"
+        display="default"
+        onChange={(event: DateTimePickerEvent, date?: Date) => {
+          onDismiss();
+          if (event.type === 'set' && date) onSelectDate(formatDate(date));
+        }}
+      />
+    );
+  }
 
-  const todayDate = new Date();
-  const todayCalStr = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-${String(todayDate.getDate()).padStart(2, '0')}`;
-
-  const calSelected = toCalDate(selectedDate);
-  const markedDates = calSelected
-    ? { [calSelected]: { selected: true, selectedColor: Theme.colors.primary } }
-    : {};
-
+  // ── iOS: inline picker in bottom sheet ──
   return (
     <Portal>
       <Modal
         visible={visible}
         onDismiss={onDismiss}
-        contentContainerStyle={[styles.bottomSheet, styles.calSheet, { paddingBottom: insets.bottom + 20 }]}
+        contentContainerStyle={[styles.bottomSheet, { paddingBottom: insets.bottom + 8 }]}
       >
         <View style={styles.dragHandle} />
-        <Text style={styles.sheetTitle}>Select Date</Text>
-        <Divider style={{ marginBottom: 8 }} />
 
-        <Calendar
-          current={calSelected || todayCalStr}
-          markedDates={markedDates}
-          onDayPress={(day) => onSelectDate(toDisplayDate(day.dateString))}
-          theme={{
-            arrowColor: Theme.colors.primary,
-            selectedDayBackgroundColor: Theme.colors.primary,
-            selectedDayTextColor: '#FFFFFF',
-            todayTextColor: Theme.colors.primary,
-            dotColor: Theme.colors.primary,
-            textDayFontWeight: '600',
-            textMonthFontWeight: '800',
-            textDayHeaderFontWeight: '700',
+        <View style={styles.pickerHeaderRow}>
+          <TouchableOpacity onPress={onDismiss} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Text style={styles.pickerCancelText}>Cancel</Text>
+          </TouchableOpacity>
+          <Text style={styles.sheetTitle}>Select Date</Text>
+          <TouchableOpacity
+            onPress={() => { onSelectDate(formatDate(tempDate)); onDismiss(); }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Text style={styles.pickerDoneText}>Done</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Divider style={{ backgroundColor: '#F0F0F0' }} />
+
+        <DateTimePicker
+          value={tempDate}
+          mode="date"
+          display="inline"
+          onChange={(_event: DateTimePickerEvent, date?: Date) => {
+            if (date) setTempDate(date);
           }}
-          style={styles.calendarWidget}
+          accentColor={Theme.colors.primary}
+          themeVariant="light"
+          style={styles.pickerWidget}
         />
-
-        <TouchableOpacity
-          style={styles.todayBtn}
-          onPress={() => {
-            const d = String(todayDate.getDate()).padStart(2, '0');
-            const m = String(todayDate.getMonth() + 1).padStart(2, '0');
-            onSelectDate(`${d}/${m}/${todayDate.getFullYear()}`);
-          }}
-          activeOpacity={0.75}
-        >
-          <Text style={styles.todayBtnText}>Today</Text>
-        </TouchableOpacity>
       </Modal>
     </Portal>
   );
@@ -632,9 +642,6 @@ const styles = StyleSheet.create({
       android: { elevation: 16 },
     }),
   },
-  calSheet: {
-    paddingHorizontal: 16,
-  },
   dragHandle: {
     width: 40,
     height: 4,
@@ -644,11 +651,9 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   sheetTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '800',
     color: '#000000',
-    textAlign: 'center',
-    marginBottom: 14,
     letterSpacing: -0.2,
   },
   sheetSearchWrap: {
@@ -699,24 +704,25 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
   },
 
-  // ── Calendar ──
-  calendarWidget: {
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  todayBtn: {
-    marginTop: 14,
-    marginHorizontal: 16,
-    paddingVertical: 13,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: Theme.colors.primary,
+  // ── Date Picker ──
+  pickerHeaderRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingBottom: 14,
   },
-  todayBtnText: {
-    fontSize: 14,
+  pickerCancelText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#757575',
+  },
+  pickerDoneText: {
+    fontSize: 15,
     fontWeight: '700',
     color: Theme.colors.primary,
-    letterSpacing: 0.3,
+  },
+  pickerWidget: {
+    marginHorizontal: 8,
   },
 });

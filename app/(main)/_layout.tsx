@@ -33,6 +33,27 @@ export default function MainLayout() {
           title: 'Update Stage',
         }}
       />
+      <Drawer.Screen
+        name="whatsapp-message"
+        options={{
+          drawerItemStyle: { display: 'none' },
+          title: 'WhatsApp Message',
+        }}
+      />
+      <Drawer.Screen
+        name="add-milestone"
+        options={{
+          drawerItemStyle: { display: 'none' },
+          title: 'Add Milestone',
+        }}
+      />
+      <Drawer.Screen
+        name="add-note"
+        options={{
+          drawerItemStyle: { display: 'none' },
+          title: 'Add Note',
+        }}
+      />
     </Drawer>
   );
 }

@@ -3,9 +3,10 @@ import LeadActionDrawer, { LeadItem } from '@/components/LeadActionDrawer';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   FlatList,
+  RefreshControl,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -27,6 +28,99 @@ import {
   Text
 } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
+
+// ─── Skeleton primitives ────────────────────────────────────────────────────
+
+function SkeletonBox({
+  width,
+  height,
+  borderRadius = 6,
+  style,
+}: {
+  width: number | string;
+  height: number;
+  borderRadius?: number;
+  style?: object;
+}) {
+  const opacity = useSharedValue(1);
+
+  useEffect(() => {
+    opacity.value = withRepeat(
+      withTiming(0.35, { duration: 750, easing: Easing.inOut(Easing.ease) }),
+      -1,
+      true
+    );
+  }, [opacity]);
+
+  const animStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
+
+  return (
+    <Animated.View
+      style={[
+        { width: width as any, height, borderRadius, backgroundColor: '#E0E0E0' },
+        animStyle,
+        style,
+      ]}
+    />
+  );
+}
+
+function SkeletonListCard() {
+  return (
+    <View style={skeletonStyles.listCard}>
+      {/* Avatar */}
+      <SkeletonBox width={50} height={50} borderRadius={25} />
+
+      {/* Lines */}
+      <View style={skeletonStyles.listLines}>
+        <SkeletonBox width="60%" height={14} borderRadius={7} />
+        <SkeletonBox width="45%" height={12} borderRadius={6} style={{ marginTop: 8 }} />
+        <SkeletonBox width="70%" height={10} borderRadius={5} style={{ marginTop: 8 }} />
+        <SkeletonBox width="40%" height={10} borderRadius={5} style={{ marginTop: 8 }} />
+        <SkeletonBox width="55%" height={10} borderRadius={5} style={{ marginTop: 6 }} />
+      </View>
+
+      {/* Action buttons */}
+      <View style={skeletonStyles.listActions}>
+        <SkeletonBox width={36} height={36} borderRadius={18} />
+        <SkeletonBox width={36} height={36} borderRadius={18} style={{ marginTop: 8 }} />
+      </View>
+    </View>
+  );
+}
+
+function SkeletonGridCard() {
+  return (
+    <View style={skeletonStyles.gridCard}>
+      <SkeletonBox width={48} height={48} borderRadius={24} style={{ alignSelf: 'center' }} />
+      <SkeletonBox width="70%" height={13} borderRadius={6} style={{ alignSelf: 'center', marginTop: 12 }} />
+      <SkeletonBox width="55%" height={11} borderRadius={5} style={{ alignSelf: 'center', marginTop: 8 }} />
+      <View style={skeletonStyles.gridActionRow}>
+        <SkeletonBox width={32} height={32} borderRadius={16} />
+        <SkeletonBox width={32} height={32} borderRadius={16} />
+      </View>
+    </View>
+  );
+}
+
+function SkeletonStatusChips() {
+  return (
+    <View style={skeletonStyles.chipsRow}>
+      {[80, 90, 110, 75, 100].map((w, i) => (
+        <SkeletonBox key={i} width={w} height={34} borderRadius={17} style={{ marginRight: 8 }} />
+      ))}
+    </View>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 
 // Status filter categories
 const STATUS_FILTERS = [
@@ -67,6 +161,21 @@ export default function LeadsScreen() {
   const [searchType, setSearchType] = useState('Applicant Name');
   const [selectedStatus, setSelectedStatus] = useState('All');
 
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    // Simulate initial data fetch
+    const timer = setTimeout(() => setLoading(false), 1800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    // TODO: re-fetch leads here
+    setTimeout(() => setRefreshing(false), 1000);
+  }, []);
+
   // Lead action drawer
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedLead, setSelectedLead] = useState<LeadItem | null>(null);
@@ -84,7 +193,7 @@ export default function LeadsScreen() {
   const renderLeadItem = ({ item }: { item: typeof LEADS_DATA[0] }) => {
     if (viewType === 'grid') {
       return (
-        <TouchableOpacity activeOpacity={0.75} onPress={() => openLeadDrawer(item)}>
+        <TouchableOpacity activeOpacity={0.75} onPress={() => openLeadDrawer(item)} style={styles.gridCardWrapper}>
           <Card style={styles.gridCard}>
             <View style={styles.gridCardContent}>
               <Avatar.Text
@@ -94,7 +203,7 @@ export default function LeadsScreen() {
                 color="#FFFFFF"
               />
               <Text style={styles.gridName} numberOfLines={1}>{item.name}</Text>
-              <Text style={styles.gridMobile}>{item.mobile}</Text>
+              <Text style={styles.gridMobile} numberOfLines={1}>{item.mobile}</Text>
               <View style={styles.gridActions}>
                 <IconButton icon="phone-outline" iconColor={Theme.colors.primary} size={20} />
                 <IconButton icon="message-outline" iconColor="#555555" size={20} />
@@ -232,12 +341,12 @@ export default function LeadsScreen() {
             iconColor={viewType === 'grid' ? Theme.colors.primary : "#999"}
             onPress={() => setViewType('grid')}
           />
-          <IconButton
+          {/* <IconButton
             icon="view-comfy"
             size={24}
             iconColor={viewType === 'compact' ? Theme.colors.primary : "#999"}
             onPress={() => setViewType('compact')}
-          />
+          /> */}
         </View>
       </View>
 
@@ -256,57 +365,97 @@ export default function LeadsScreen() {
 
       {/* Horizontal Status Chips */}
       <View style={styles.statusChipsContainer}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.statusChipsScroll}
-        >
-          {STATUS_FILTERS.map((status) => (
-            <TouchableOpacity
-              key={status}
-              style={[
-                styles.statusChip,
-                selectedStatus === status && styles.activeStatusChip
-              ]}
-              onPress={() => setSelectedStatus(status)}
-              activeOpacity={0.7}
-            >
-              <Text
+        {loading ? (
+          <SkeletonStatusChips />
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.statusChipsScroll}
+          >
+            {STATUS_FILTERS.map((status) => (
+              <TouchableOpacity
+                key={status}
                 style={[
-                  styles.statusChipText,
-                  selectedStatus === status && styles.activeStatusChipText
+                  styles.statusChip,
+                  selectedStatus === status && styles.activeStatusChip
                 ]}
+                onPress={() => setSelectedStatus(status)}
+                activeOpacity={0.7}
               >
-                {status}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+                <Text
+                  style={[
+                    styles.statusChipText,
+                    selectedStatus === status && styles.activeStatusChipText
+                  ]}
+                >
+                  {status}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
       </View>
 
       {/* Count and Filter Row */}
       <View style={styles.countRow}>
-        <Text style={styles.countText}>1500 Leads</Text>
-        <Button
-          mode="text"
-          icon="filter-variant"
-          labelStyle={styles.filterBtnLabel}
-          onPress={() => setFilterSheetVisible(true)}
-        >
-          Sort / Filter
-        </Button>
+        {loading ? (
+          <>
+            <SkeletonBox width={90} height={14} borderRadius={7} />
+            <SkeletonBox width={110} height={14} borderRadius={7} />
+          </>
+        ) : (
+          <>
+            <Text style={styles.countText}>1500 Leads</Text>
+            <Button
+              mode="text"
+              icon="filter-variant"
+              labelStyle={styles.filterBtnLabel}
+              onPress={() => setFilterSheetVisible(true)}
+            >
+              Sort / Filter
+            </Button>
+          </>
+        )}
       </View>
 
-      {/* Lead List */}
-      <FlatList
-        data={LEADS_DATA}
-        renderItem={renderLeadItem}
-        keyExtractor={item => item.id}
-        numColumns={viewType === 'grid' ? 2 : 1}
-        key={viewType === 'grid' ? 'grid' : 'list'}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
+      {/* Lead List / Skeleton */}
+      {loading ? (
+        <ScrollView
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {viewType === 'grid' ? (
+            <View style={skeletonStyles.gridContainer}>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <SkeletonGridCard key={i} />
+              ))}
+            </View>
+          ) : (
+            Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonListCard key={i} />
+            ))
+          )}
+        </ScrollView>
+      ) : (
+        <FlatList
+          data={LEADS_DATA}
+          renderItem={renderLeadItem}
+          keyExtractor={item => item.id}
+          numColumns={viewType === 'grid' ? 2 : 1}
+          key={viewType === 'grid' ? 'grid' : 'list'}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[Theme.colors.primary]}
+              tintColor={Theme.colors.primary}
+            />
+          }
+        />
+      )}
 
       {/* Floating Action Button */}
       <FAB
@@ -386,6 +535,26 @@ export default function LeadsScreen() {
           } else if (action === 'stage') {
             router.push({
               pathname: '/(main)/update-stage',
+              params: { leadData: JSON.stringify(lead) },
+            });
+          } else if (action === 'refer') {
+            router.push({
+              pathname: '/(main)/refer-lead',
+              params: { leadData: JSON.stringify(lead) },
+            });
+          } else if (action === 'whatsapp') {
+            router.push({
+              pathname: '/(main)/whatsapp-message',
+              params: { leadData: JSON.stringify(lead) },
+            });
+          } else if (action === 'followup') {
+            router.push({
+              pathname: '/(main)/add-milestone',
+              params: { leadData: JSON.stringify(lead) },
+            });
+          } else if (action === 'note') {
+            router.push({
+              pathname: '/(main)/add-note',
               params: { leadData: JSON.stringify(lead) },
             });
           } else {
@@ -577,9 +746,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
-  gridCard: {
+  gridCardWrapper: {
     flex: 1,
     margin: 6,
+  },
+  gridCard: {
+    flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
   },
@@ -595,6 +767,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
     textAlign: 'center',
+    color: '#000000',
   },
   gridMobile: {
     fontSize: 13,
@@ -652,4 +825,44 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 4,
   }
+});
+
+const skeletonStyles = StyleSheet.create({
+  listCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+  },
+  listLines: {
+    flex: 1,
+    marginLeft: 16,
+  },
+  listActions: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  gridCard: {
+    width: '47%',
+    margin: '1.5%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+  },
+  gridActionRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 12,
+    marginTop: 12,
+  },
+  chipsRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+  },
 });
