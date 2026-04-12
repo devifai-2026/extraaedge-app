@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Animated, Platform } from 'react-native';
 import {
   DrawerContentScrollView,
   DrawerItem
@@ -8,11 +8,14 @@ import {
   Avatar,
   Text,
   Divider,
+  Surface,
+  IconButton,
 } from 'react-native-paper';
-import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, Ionicons, FontAwesome6 } from '@expo/vector-icons';
 import { Theme } from '@/constants/theme';
-import { useRouter } from 'expo-router';
+import { useRouter, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
 
 function useSessionTimer() {
   const [seconds, setSeconds] = useState(0);
@@ -30,286 +33,361 @@ function useSessionTimer() {
   return `${h}:${m}:${s}`;
 }
 
+const MenuTab = ({ label, icon, route, isActive, onPress }: any) => {
+  return (
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        onPress();
+      }}
+      style={[
+        styles.menuTab,
+        isActive && styles.menuTabActive
+      ]}
+    >
+      <View style={styles.menuIconContainer}>
+        <MaterialCommunityIcons 
+          name={icon} 
+          size={24} 
+          color={isActive ? Theme.colors.primary : '#5F6368'} 
+        />
+      </View>
+      <Text style={[
+        styles.menuTabText,
+        isActive && styles.menuTabTextActive
+      ]}>
+        {label}
+      </Text>
+      {isActive && (
+        <View style={styles.activeIndicator} />
+      )}
+    </TouchableOpacity>
+  );
+};
+
 export function CustomDrawerContent(props: any) {
   const router = useRouter();
+  const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const sessionTime = useSessionTimer();
 
+  const handleLogout = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    router.replace('/login');
+  };
+
   return (
     <View style={styles.container}>
-      {/* Header Section */}
-      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
-        {/* Session Timer Banner */}
-        <View style={styles.timerBanner}>
-          <MaterialCommunityIcons name="timer-outline" size={16} color={Theme.colors.primary} />
-          <Text style={styles.timerLabel}>Session</Text>
-          <Text style={styles.timerText}>{sessionTime}</Text>
-        </View>
-
-        <View style={styles.profileSection}>
-          <View style={styles.avatarBorder}>
+      {/* Premium Header - Handling Top Safe Area */}
+      <Surface 
+        style={[
+          styles.header, 
+          { 
+            paddingTop: Platform.OS === 'ios' ? insets.top + 8 : insets.top + 16,
+            paddingBottom: 24 
+          }
+        ]} 
+        elevation={1}
+      >
+        <View style={styles.headerTop}>
+          <View style={styles.avatarWrapper}>
             <Avatar.Image
-              size={64}
+              size={70}
               source={{ uri: 'https://i.pravatar.cc/150?u=extraedge' }}
               style={styles.avatar}
             />
+            <View style={styles.activeDot} />
           </View>
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>Sayan Mondal</Text>
-            <View style={styles.roleBadge}>
-              <Text style={styles.roleText}>Admission Manager</Text>
-            </View>
-          </View>
+          
+          <TouchableOpacity 
+            style={styles.notificationBtn}
+            onPress={() => Haptics.selectionAsync()}
+          >
+            <MaterialCommunityIcons name="bell-outline" size={22} color="#5F6368" />
+            <View style={styles.badge} />
+          </TouchableOpacity>
         </View>
-        <View style={styles.emailContainer}>
-            <MaterialCommunityIcons name="email-outline" size={16} color={Theme.colors.primary} />
-            <Text style={styles.userEmail}>sayan@extraedge.com</Text>
-        </View>
-      </View>
-      
-      <Divider style={styles.headerDivider} />
 
-      {/* Main Menu - Sharp & Visible */}
+        <View style={styles.profileInfo}>
+          <Text style={styles.userName}>Sayan Mondal</Text>
+          <Text style={styles.userRole}>Admission Manager</Text>
+        </View>
+
+        <Surface style={styles.timerPill} elevation={0}>
+          <View style={styles.timerContent}>
+            <View style={styles.pulseContainer}>
+              <View style={styles.pulsePoint} />
+            </View>
+            <Text style={styles.timerLabel}>ACTIVE SESSION</Text>
+          </View>
+          <Text style={styles.timerValue}>{sessionTime}</Text>
+        </Surface>
+      </Surface>
+
       <DrawerContentScrollView 
         {...props} 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        // Removing default insets to handle them manually for a tighter design
+        paddingTop={0}
       >
-        <View style={styles.menuGroup}>
-            <DrawerItem
-            label="Settings"
-            icon={({ focused, color, size }) => (
-                <MaterialCommunityIcons 
-                    name={focused ? "cog" : "cog-outline"} 
-                    size={22}
-                    color={focused ? Theme.colors.primary : "#333333"} 
-                />
-            )}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>MENU</Text>
+          <MenuTab 
+            label="Settings" 
+            icon="cog-outline" 
+            isActive={pathname === '/account-settings'} 
             onPress={() => router.push('/account-settings' as any)}
-            activeTintColor={Theme.colors.primary}
-            activeBackgroundColor="#FEECEB"
-            labelStyle={styles.menuLabel}
-            style={styles.drawerItem}
-            />
-            <DrawerItem
-            label="Troubleshoot"
-            icon={({ focused, color, size }) => (
-                <MaterialCommunityIcons
-                    name={focused ? "wrench" : "wrench-outline"}
-                    size={22}
-                    color={focused ? Theme.colors.primary : "#333333"}
-                />
-            )}
+          />
+          <MenuTab 
+            label="Troubleshoot" 
+            icon="wrench-outline" 
+            isActive={pathname === '/help-troubleshoot'} 
             onPress={() => router.push('/help-troubleshoot' as any)}
-            activeTintColor={Theme.colors.primary}
-            activeBackgroundColor="#FEECEB"
-            labelStyle={styles.menuLabel}
-            style={styles.drawerItem}
-            />
-            <DrawerItem
-            label="Sync Data"
-            icon={({ focused, color, size }) => (
-                <MaterialCommunityIcons 
-                    name={"sync"} 
-                    size={22}
-                    color={focused ? Theme.colors.primary : "#333333"} 
-                />
-            )}
+          />
+          <MenuTab 
+            label="Sync Data" 
+            icon="sync" 
+            isActive={false} 
             onPress={() => {}}
-            activeTintColor={Theme.colors.primary}
-            activeBackgroundColor="#FEECEB"
-            labelStyle={styles.menuLabel}
-            style={styles.drawerItem}
-            />
-            <DrawerItem
-            label="Self Test"
-            icon={({ focused, color, size }) => (
-                <MaterialCommunityIcons 
-                    name={focused ? "check-decagram" : "check-decagram-outline"} 
-                    size={22}
-                    color={focused ? Theme.colors.primary : "#333333"} 
-                />
-            )}
+          />
+          <MenuTab 
+            label="Self Test" 
+            icon="shield-check-outline" 
+            isActive={false} 
             onPress={() => {}}
-            activeTintColor={Theme.colors.primary}
-            activeBackgroundColor="#FEECEB"
-            labelStyle={styles.menuLabel}
-            style={styles.drawerItem}
-            />
+          />
         </View>
       </DrawerContentScrollView>
 
-      {/* Fixed Bottom Section */}
-      <View style={[styles.bottomSection, { paddingBottom: insets.bottom + 20 }]}>
-        <Divider style={styles.footerDivider} />
+      {/* Footer Section - Handling Bottom Safe Area */}
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20) + 16 }]}>
         <TouchableOpacity 
-            style={styles.logoutButton} 
-            onPress={() => router.replace('/login')}
-            activeOpacity={0.8}
+          style={styles.logoutBtn} 
+          onPress={handleLogout}
         >
-            <MaterialCommunityIcons name="logout" size={24} color={Theme.colors.primary} />
-            <Text style={styles.logoutText}>Logout Session</Text>
+          <LinearGradientCover />
+          <MaterialCommunityIcons name="power" size={22} color="#FFF" />
+          <Text style={styles.logoutText}>Logout Session</Text>
         </TouchableOpacity>
         
-        <View style={styles.footerInfo}>
-          <Text style={styles.versionText}>EXTRAAEDGE CRM v1.0.32</Text>
-          <Text style={styles.copyrightText}>© 2026 Education Admissions CRM</Text>
+        <View style={styles.versionInfo}>
+          <Text style={styles.versionLabel}>EXTRAAEDGE CRM</Text>
+          <Text style={styles.versionValue}>v1.0.32 Build 482</Text>
         </View>
       </View>
     </View>
   );
 }
 
+// Fallback for Gradient since library might not be available
+const LinearGradientCover = () => (
+  <View style={[StyleSheet.absoluteFill, { backgroundColor: Theme.colors.primary, borderRadius: 14 }]} />
+);
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8F9FA',
   },
   header: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingBottom: 24,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
   },
-  timerBanner: {
+  headerTop: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#FFF5F5',
-    borderWidth: 1,
-    borderColor: '#FFDADA',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginBottom: 18,
-    gap: 6,
+    marginBottom: 20,
   },
-  timerLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#888',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    flex: 1,
-  },
-  timerText: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: Theme.colors.primary,
-    letterSpacing: 1.5,
-    fontVariant: ['tabular-nums'],
-  },
-  profileSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatarBorder: {
-    padding: 2,
-    borderRadius: 36,
-    borderWidth: 2,
-    borderColor: Theme.colors.primary,
+  avatarWrapper: {
+    position: 'relative',
   },
   avatar: {
-    backgroundColor: '#EEEEEE',
+    backgroundColor: '#F1F3F4',
+    borderWidth: 3,
+    borderColor: '#F8F9FA',
   },
-  userInfo: {
-    marginLeft: 16,
-    flex: 1,
+  activeDot: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#4CAF50',
+    borderWidth: 3,
+    borderColor: '#FFF',
+  },
+  notificationBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F1F3F4',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Theme.colors.primary,
+    borderWidth: 1.5,
+    borderColor: '#FFF',
+  },
+  profileInfo: {
+    marginBottom: 20,
   },
   userName: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#000000', // Pure black for max sharpness
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#202124',
     letterSpacing: -0.5,
   },
-  roleBadge: {
-    backgroundColor: '#E5393520', // Very light red tint
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-    alignSelf: 'flex-start',
-    marginTop: 6,
+  userRole: {
+    fontSize: 14,
+    color: '#5F6368',
+    fontWeight: '500',
+    marginTop: 2,
   },
-  roleText: {
-    fontSize: 12,
-    color: Theme.colors.primary,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-  },
-  emailContainer: {
+  timerPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 20,
+    justifyContent: 'space-between',
     backgroundColor: '#F8F9FA',
-    padding: 12,
-    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#F1F3F5',
+    borderColor: '#E8EAED',
   },
-  userEmail: {
-    fontSize: 14,
-    color: '#495057',
-    marginLeft: 10,
-    fontWeight: '600',
+  timerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  headerDivider: {
-    height: 1.5,
-    backgroundColor: '#F1F3F5',
+  pulseContainer: {
+    width: 12,
+    height: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  pulsePoint: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#4CAF50',
+  },
+  timerLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#80868B',
+    letterSpacing: 0.8,
+  },
+  timerValue: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#202124',
+    fontVariant: ['tabular-nums'],
   },
   scrollContent: {
-    paddingTop: 16,
+    paddingTop: 24,
   },
-  menuGroup: {
-    paddingHorizontal: 12,
+  sectionContainer: {
+    paddingHorizontal: 16,
   },
-  drawerItem: {
-    borderRadius: 10,
-    marginVertical: 2,
-    paddingVertical: 0,
-    height: 44,
-    justifyContent: 'center',
-  },
-  menuLabel: {
-    fontSize: 14,
+  sectionTitle: {
+    fontSize: 12,
     fontWeight: '700',
-    color: '#212529',
-    marginLeft: -20,
+    color: '#9AA0A6',
+    letterSpacing: 1.2,
+    marginBottom: 12,
+    marginLeft: 12,
   },
-  bottomSection: {
-    paddingHorizontal: 24,
-  },
-  footerDivider: {
-    marginBottom: 20,
-    backgroundColor: '#F1F3F5',
-    height: 1,
-  },
-  logoutButton: {
+  menuTab: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF5F5',
-    padding: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
     borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: '#FFDADA',
+    marginBottom: 4,
   },
-  logoutText: {
-    marginLeft: 14,
-    fontSize: 17,
-    fontWeight: '800',
-    color: Theme.colors.primary,
+  menuTabActive: {
+    backgroundColor: '#FEECEB',
   },
-  footerInfo: {
-    marginTop: 24,
+  menuIconContainer: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  versionText: {
-    fontSize: 12,
-    color: '#ADB5BD',
-    fontWeight: '700',
-    letterSpacing: 1,
+  menuTabText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#3C4043',
+    marginLeft: 8,
+    flex: 1,
   },
-  copyrightText: {
+  menuTabTextActive: {
+    color: Theme.colors.primary,
+    fontWeight: '700',
+  },
+  activeIndicator: {
+    width: 4,
+    height: 20,
+    backgroundColor: Theme.colors.primary,
+    borderRadius: 2,
+  },
+  footer: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    backgroundColor: '#F8F9FA',
+  },
+  logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 14,
+    ...Platform.select({
+      ios: {
+        shadowColor: Theme.colors.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
+  },
+  logoutText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '700',
+    marginLeft: 10,
+  },
+  versionInfo: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  versionLabel: {
     fontSize: 10,
-    color: '#CED4DA',
-    marginTop: 6,
+    fontWeight: '800',
+    color: '#BDC1C6',
+    letterSpacing: 1.5,
+  },
+  versionValue: {
+    fontSize: 11,
+    color: '#BDC1C6',
+    marginTop: 2,
     fontWeight: '500',
   },
 });

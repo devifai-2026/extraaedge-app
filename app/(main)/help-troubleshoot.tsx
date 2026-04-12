@@ -13,10 +13,11 @@ import {
 } from 'react-native';
 import { Divider, Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Theme } from '@/constants/theme';
+import { StatusBar } from 'expo-status-bar';
 
 // ─── Static Data ─────────────────────────────────────────────────────────────
 
@@ -208,9 +209,10 @@ export default function HelpTroubleshootScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={styles.safeArea}>
+      <StatusBar style="dark" />
       {/* ── Top Navigation Bar ── */}
-      <View style={styles.navbar}>
+      <View style={[styles.navbar, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity style={styles.navIconBtn} onPress={() => router.back()} activeOpacity={0.75}>
           <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
         </TouchableOpacity>
@@ -222,7 +224,10 @@ export default function HelpTroubleshootScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 36 }]}
+        contentContainerStyle={[
+          styles.scrollContent, 
+          { paddingBottom: Math.max(insets.bottom, 20) + 36 }
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -520,7 +525,7 @@ export default function HelpTroubleshootScreen() {
           <Text style={styles.footerSubText}>© 2026 Education Admissions CRM</Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
