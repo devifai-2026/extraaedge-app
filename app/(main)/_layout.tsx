@@ -54,6 +54,20 @@ export default function MainLayout() {
           title: 'Add Note',
         }}
       />
+      <Drawer.Screen
+        name="account-settings"
+        options={{
+          drawerItemStyle: { display: 'none' },
+          title: 'Account Settings',
+        }}
+      />
+      <Drawer.Screen
+        name="help-troubleshoot"
+        options={{
+          drawerItemStyle: { display: 'none' },
+          title: 'Help',
+        }}
+      />
     </Drawer>
   );
 }

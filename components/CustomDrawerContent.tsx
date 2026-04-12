@@ -1,32 +1,56 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { 
-  DrawerContentScrollView, 
+import {
+  DrawerContentScrollView,
   DrawerItem
 } from '@react-navigation/drawer';
-import { 
-  Avatar, 
-  Text, 
-  Divider, 
+import {
+  Avatar,
+  Text,
+  Divider,
 } from 'react-native-paper';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/theme';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+function useSessionTimer() {
+  const [seconds, setSeconds] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSeconds(s => s + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+  const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+  const s = String(seconds % 60).padStart(2, '0');
+  return `${h}:${m}:${s}`;
+}
+
 export function CustomDrawerContent(props: any) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  
+  const sessionTime = useSessionTimer();
+
   return (
     <View style={styles.container}>
-      {/* Header Section - High Contrast */}
-      <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
+      {/* Header Section */}
+      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
+        {/* Session Timer Banner */}
+        <View style={styles.timerBanner}>
+          <MaterialCommunityIcons name="timer-outline" size={16} color={Theme.colors.primary} />
+          <Text style={styles.timerLabel}>Session</Text>
+          <Text style={styles.timerText}>{sessionTime}</Text>
+        </View>
+
         <View style={styles.profileSection}>
           <View style={styles.avatarBorder}>
-            <Avatar.Image 
-              size={68} 
-              source={{ uri: 'https://i.pravatar.cc/150?u=extraedge' }} 
+            <Avatar.Image
+              size={64}
+              source={{ uri: 'https://i.pravatar.cc/150?u=extraedge' }}
               style={styles.avatar}
             />
           </View>
@@ -38,7 +62,7 @@ export function CustomDrawerContent(props: any) {
           </View>
         </View>
         <View style={styles.emailContainer}>
-            <MaterialCommunityIcons name="email" size={18} color={Theme.colors.primary} />
+            <MaterialCommunityIcons name="email-outline" size={16} color={Theme.colors.primary} />
             <Text style={styles.userEmail}>sayan@extraedge.com</Text>
         </View>
       </View>
@@ -57,11 +81,11 @@ export function CustomDrawerContent(props: any) {
             icon={({ focused, color, size }) => (
                 <MaterialCommunityIcons 
                     name={focused ? "cog" : "cog-outline"} 
-                    size={26} 
+                    size={22}
                     color={focused ? Theme.colors.primary : "#333333"} 
                 />
             )}
-            onPress={() => {}}
+            onPress={() => router.push('/account-settings' as any)}
             activeTintColor={Theme.colors.primary}
             activeBackgroundColor="#FEECEB"
             labelStyle={styles.menuLabel}
@@ -70,13 +94,13 @@ export function CustomDrawerContent(props: any) {
             <DrawerItem
             label="Troubleshoot"
             icon={({ focused, color, size }) => (
-                <MaterialCommunityIcons 
-                    name={focused ? "wrench" : "wrench-outline"} 
-                    size={26} 
-                    color={focused ? Theme.colors.primary : "#333333"} 
+                <MaterialCommunityIcons
+                    name={focused ? "wrench" : "wrench-outline"}
+                    size={22}
+                    color={focused ? Theme.colors.primary : "#333333"}
                 />
             )}
-            onPress={() => {}}
+            onPress={() => router.push('/help-troubleshoot' as any)}
             activeTintColor={Theme.colors.primary}
             activeBackgroundColor="#FEECEB"
             labelStyle={styles.menuLabel}
@@ -86,8 +110,8 @@ export function CustomDrawerContent(props: any) {
             label="Sync Data"
             icon={({ focused, color, size }) => (
                 <MaterialCommunityIcons 
-                    name={focused ? "sync" : "sync-circle-outline"} 
-                    size={26} 
+                    name={"sync"} 
+                    size={22}
                     color={focused ? Theme.colors.primary : "#333333"} 
                 />
             )}
@@ -102,7 +126,7 @@ export function CustomDrawerContent(props: any) {
             icon={({ focused, color, size }) => (
                 <MaterialCommunityIcons 
                     name={focused ? "check-decagram" : "check-decagram-outline"} 
-                    size={26} 
+                    size={22}
                     color={focused ? Theme.colors.primary : "#333333"} 
                 />
             )}
@@ -143,8 +167,35 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 24,
-    paddingBottom: 24,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  timerBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF5F5',
+    borderWidth: 1,
+    borderColor: '#FFDADA',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 18,
+    gap: 6,
+  },
+  timerLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#888',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    flex: 1,
+  },
+  timerText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: Theme.colors.primary,
+    letterSpacing: 1.5,
+    fontVariant: ['tabular-nums'],
   },
   profileSection: {
     flexDirection: 'row',
@@ -210,15 +261,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   drawerItem: {
-    borderRadius: 14,
-    marginVertical: 4,
-    paddingVertical: 2,
+    borderRadius: 10,
+    marginVertical: 2,
+    paddingVertical: 0,
+    height: 44,
+    justifyContent: 'center',
   },
   menuLabel: {
-    fontSize: 17,
+    fontSize: 14,
     fontWeight: '700',
-    color: '#212529', // High contrast dark grey/black
-    marginLeft: -10,
+    color: '#212529',
+    marginLeft: -20,
   },
   bottomSection: {
     paddingHorizontal: 24,

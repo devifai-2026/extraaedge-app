@@ -22,8 +22,10 @@ import {
   FAB,
   IconButton,
   List,
+  Menu,
   Modal,
   Portal,
+  RadioButton,
   Searchbar,
   Text
 } from 'react-native-paper';
@@ -122,6 +124,17 @@ function SkeletonStatusChips() {
 
 // ────────────────────────────────────────────────────────────────────────────
 
+// Saved lead lists
+const SAVED_LISTS = [
+  'All Leads',
+  'Today Leads',
+  'Demo Attended Leads',
+  'Followup Pending Leads',
+  'Visited Leads',
+  'Hot Prospects',
+  'Recently Added Leads',
+];
+
 // Status filter categories
 const STATUS_FILTERS = [
   'All',
@@ -189,6 +202,14 @@ export default function LeadsScreen() {
   const [datasetSheetVisible, setDatasetSheetVisible] = useState(false);
   const [searchTypeSheetVisible, setSearchTypeSheetVisible] = useState(false);
   const [filterSheetVisible, setFilterSheetVisible] = useState(false);
+
+  // More menu (3-dot popover)
+  const [moreMenuVisible, setMoreMenuVisible] = useState(false);
+
+  // Saved list drawer
+  const [savedListDrawerVisible, setSavedListDrawerVisible] = useState(false);
+  const [selectedSavedList, setSelectedSavedList] = useState('All Leads');
+  const [appliedSavedList, setAppliedSavedList] = useState('All Leads');
 
   const renderLeadItem = ({ item }: { item: typeof LEADS_DATA[0] }) => {
     if (viewType === 'grid') {
@@ -301,6 +322,7 @@ export default function LeadsScreen() {
         <Appbar.Content title="Leads" titleStyle={styles.headerTitle} />
         <Appbar.Action icon="phone-outline" onPress={() => { }} />
         <Appbar.Action icon="bell-outline" onPress={() => { }} />
+        
       </Appbar.Header>
 
       {/* Search and Dataset Section */}
@@ -329,6 +351,28 @@ export default function LeadsScreen() {
             size={24}
             onPress={() => setIsSearching(!isSearching)}
           />
+          <Menu
+            visible={moreMenuVisible}
+            onDismiss={() => setMoreMenuVisible(false)}
+            anchor={
+              <IconButton
+                icon="dots-vertical"
+                size={24}
+                onPress={() => setMoreMenuVisible(true)}
+              />
+            }
+            contentStyle={styles.moreMenuContent}
+          >
+            <Menu.Item
+              leadingIcon="format-list-bulleted"
+              onPress={() => {
+                setMoreMenuVisible(false);
+                setSavedListDrawerVisible(true);
+              }}
+              title="View List"
+              titleStyle={styles.moreMenuItem}
+            />
+          </Menu>
           <IconButton
             icon="view-list"
             size={24}
@@ -411,7 +455,7 @@ export default function LeadsScreen() {
               mode="text"
               icon="filter-variant"
               labelStyle={styles.filterBtnLabel}
-              onPress={() => setFilterSheetVisible(true)}
+              onPress={() => router.push('/(main)/sort-filter-leads')}
             >
               Sort / Filter
             </Button>
@@ -521,6 +565,63 @@ export default function LeadsScreen() {
         </>
       )}
 
+      {/* Saved List Bottom Drawer */}
+      <Portal>
+        <Modal
+          visible={savedListDrawerVisible}
+          onDismiss={() => {
+            setSelectedSavedList(appliedSavedList);
+            setSavedListDrawerVisible(false);
+          }}
+          contentContainerStyle={[styles.bottomSheet, { paddingBottom: insets.bottom + 20 }]}
+        >
+          <View style={styles.dragHandle} />
+          <Text style={styles.modalTitle}>Saved Lists</Text>
+          <Divider />
+          <ScrollView style={styles.sheetContent} showsVerticalScrollIndicator={false}>
+            {SAVED_LISTS.map((listName) => (
+              <TouchableOpacity
+                key={listName}
+                activeOpacity={0.7}
+                style={[
+                  styles.savedListItem,
+                  selectedSavedList === listName && styles.savedListItemSelected,
+                ]}
+                onPress={() => setSelectedSavedList(listName)}
+              >
+                <Text
+                  style={[
+                    styles.savedListItemText,
+                    selectedSavedList === listName && styles.savedListItemTextSelected,
+                  ]}
+                >
+                  {listName}
+                </Text>
+                <RadioButton
+                  value={listName}
+                  status={selectedSavedList === listName ? 'checked' : 'unchecked'}
+                  onPress={() => setSelectedSavedList(listName)}
+                  color={Theme.colors.primary}
+                />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          <View style={styles.savedListFooter}>
+            <Button
+              mode="contained"
+              style={styles.savedListApplyBtn}
+              labelStyle={styles.savedListApplyLabel}
+              onPress={() => {
+                setAppliedSavedList(selectedSavedList);
+                setSavedListDrawerVisible(false);
+              }}
+            >
+              Apply
+            </Button>
+          </View>
+        </Modal>
+      </Portal>
+
       {/* Lead action bottom drawer */}
       <LeadActionDrawer
         visible={drawerVisible}
@@ -618,6 +719,7 @@ const styles = StyleSheet.create({
   rightIcons: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginRight: -8,
   },
   searchBarContainer: {
     paddingHorizontal: 16,
@@ -824,7 +926,58 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.primary,
     borderRadius: 12,
     paddingVertical: 4,
-  }
+  },
+  moreMenuContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    elevation: 6,
+    marginTop: 4,
+  },
+  moreMenuItem: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#000000',
+  },
+  savedListItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginHorizontal: 8,
+    marginVertical: 3,
+  },
+  savedListItemSelected: {
+    backgroundColor: '#FFF0F0',
+  },
+  savedListItemText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#000000',
+    flex: 1,
+  },
+  savedListItemTextSelected: {
+    color: Theme.colors.primary,
+    fontWeight: '700',
+  },
+  savedListFooter: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F3F5',
+  },
+  savedListApplyBtn: {
+    backgroundColor: Theme.colors.primary,
+    borderRadius: 30,
+    paddingVertical: 4,
+  },
+  savedListApplyLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
 });
 
 const skeletonStyles = StyleSheet.create({
