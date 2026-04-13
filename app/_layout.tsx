@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { PaperProvider, MD3LightTheme } from 'react-native-paper';
 import 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AppSplashScreen } from '@/components/AppSplashScreen';
@@ -50,7 +50,7 @@ export default function RootLayout() {
               <Stack.Screen name="(main)" />
               <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
             </Stack>
-            <StatusBar style="auto" />
+            <StatusBar style="dark" />
           </ThemeProvider>
         </PaperProvider>
       </GestureHandlerRootView>

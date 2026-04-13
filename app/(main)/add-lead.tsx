@@ -1,6 +1,6 @@
 import { Theme } from '@/constants/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
@@ -15,17 +15,17 @@ import {
   UIManager,
   View,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Appbar,
   Checkbox,
   Divider,
-  List,
   Modal,
   Portal,
   Searchbar,
   Text,
+  List,
 } from 'react-native-paper';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -441,25 +441,16 @@ const SECTION1_FIELDS: (keyof FormData)[] = [
 const SECTION2_FIELDS: (keyof FormData)[] = ['state'];
 const SECTION3_FIELDS: (keyof FormData)[] = ['channel', 'source'];
 
-export default function EditLeadScreen() {
+export default function AddLeadScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ leadData?: string }>();
-
-  const leadData = useMemo(() => {
-    try {
-      return params.leadData ? JSON.parse(params.leadData) : null;
-    } catch {
-      return null;
-    }
-  }, [params.leadData]);
 
   const [formData, setFormData] = useState<FormData>({
-    applicantName: leadData?.name ?? '',
+    applicantName: '',
     emailId: '',
     alternateEmailId: '',
-    whatsappNumber: leadData?.mobile ?? '',
+    whatsappNumber: '',
     alternateContactNumber: '',
-    program: leadData?.program ?? '',
+    program: '',
     currentLocation: '',
     ugDegree: '',
     ugSpecialization: '',
@@ -523,7 +514,7 @@ export default function EditLeadScreen() {
     return valid;
   };
 
-  const handleUpdate = () => {
+  const handleSubmit = () => {
     if (validate()) {
       router.back();
     }
@@ -533,60 +524,32 @@ export default function EditLeadScreen() {
   const section2HasError = SECTION2_FIELDS.some(k => !!errors[k]);
   const section3HasError = SECTION3_FIELDS.some(k => !!errors[k]);
 
-  const mediumDisplay = formData.medium.length > 0
-    ? formData.medium.join(', ')
-    : '';
+  // Stable handlers
+  const openGender    = useCallback(() => openModal('gender'),    [openModal]);
+  const openStage     = useCallback(() => openModal('stage'),     [openModal]);
+  const openSubStage  = useCallback(() => openModal('subStage'),  [openModal]);
+  const openState     = useCallback(() => openModal('state'),     [openModal]);
+  const openChannel   = useCallback(() => openModal('channel'),   [openModal]);
+  const openSource    = useCallback(() => openModal('source'),    [openModal]);
 
-  // Stable modal open handlers
-  const openGender = useCallback(() => openModal('gender'), [openModal]);
-  const openStage = useCallback(() => openModal('stage'), [openModal]);
-  const openSubStage = useCallback(() => openModal('subStage'), [openModal]);
-  const openState = useCallback(() => openModal('state'), [openModal]);
-  const openChannel = useCallback(() => openModal('channel'), [openModal]);
-  const openSource = useCallback(() => openModal('source'), [openModal]);
-  const openCampaign = useCallback(() => openModal('campaign'), [openModal]);
-  const openMedium = useCallback(() => openModal('medium'), [openModal]);
-
-  // Stable updateField wrappers
   const setApplicantName = useCallback((v: string) => updateField('applicantName', v), [updateField]);
-  const setEmailId = useCallback((v: string) => updateField('emailId', v), [updateField]);
-  const setAlternateEmailId = useCallback((v: string) => updateField('alternateEmailId', v), [updateField]);
   const setWhatsappNumber = useCallback((v: string) => updateField('whatsappNumber', v), [updateField]);
-  const setAlternateContactNumber = useCallback((v: string) => updateField('alternateContactNumber', v), [updateField]);
   const setProgram = useCallback((v: string) => updateField('program', v), [updateField]);
-  const setCurrentLocation = useCallback((v: string) => updateField('currentLocation', v), [updateField]);
-  const setUgDegree = useCallback((v: string) => updateField('ugDegree', v), [updateField]);
-  const setUgSpecialization = useCallback((v: string) => updateField('ugSpecialization', v), [updateField]);
-  const setUgUniversity = useCallback((v: string) => updateField('ugUniversity', v), [updateField]);
-  const setUgGraduationYear = useCallback((v: string) => updateField('ugGraduationYear', v), [updateField]);
-  const setPgYear = useCallback((v: string) => updateField('pgYear', v), [updateField]);
-  const setRemarks = useCallback((v: string) => updateField('remarks', v), [updateField]);
-  const setFatherFullName = useCallback((v: string) => updateField('fatherFullName', v), [updateField]);
-  const setFatherMobile = useCallback((v: string) => updateField('fatherMobile', v), [updateField]);
-  const setFatherEmail = useCallback((v: string) => updateField('fatherEmail', v), [updateField]);
-  const setMotherFullName = useCallback((v: string) => updateField('motherFullName', v), [updateField]);
-  const setMotherMobile = useCallback((v: string) => updateField('motherMobile', v), [updateField]);
-  const setMotherEmail = useCallback((v: string) => updateField('motherEmail', v), [updateField]);
-  const setCity = useCallback((v: string) => updateField('city', v), [updateField]);
-  const setAddress = useCallback((v: string) => updateField('address', v), [updateField]);
-  const setPincode = useCallback((v: string) => updateField('pincode', v), [updateField]);
-
   const setGender = useCallback((v: string) => updateField('gender', v), [updateField]);
   const setStage = useCallback((v: string) => updateField('stage', v), [updateField]);
   const setSubStage = useCallback((v: string) => updateField('subStage', v), [updateField]);
   const setState = useCallback((v: string) => updateField('state', v), [updateField]);
   const setChannel = useCallback((v: string) => updateField('channel', v), [updateField]);
   const setSource = useCallback((v: string) => updateField('source', v), [updateField]);
-  const setCampaign = useCallback((v: string) => updateField('campaign', v), [updateField]);
-  const setMedium = useCallback((v: string[]) => updateField('medium', v), [updateField]);
+  const setRemarks = useCallback((v: string) => updateField('remarks', v), [updateField]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <Appbar.Header style={styles.appbar}>
         <Appbar.BackAction onPress={() => router.back()} color="#000000" />
-        <Appbar.Content title="Edit Lead" titleStyle={styles.headerTitle} />
-        <TouchableOpacity style={styles.headerActionPill} onPress={handleUpdate}>
-          <Text style={styles.headerActionText}>Update</Text>
+        <Appbar.Content title="Add Lead" titleStyle={styles.headerTitle} />
+        <TouchableOpacity style={styles.headerActionPill} onPress={handleSubmit}>
+          <Text style={styles.headerActionText}>Submit</Text>
         </TouchableOpacity>
       </Appbar.Header>
 
@@ -594,12 +557,11 @@ export default function EditLeadScreen() {
         <ScrollView
           style={styles.flex}
           contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
           <AccordionSection title="Lead / Application Details" hasError={section1HasError}>
             <InputField label="Applicant Name" value={formData.applicantName} onChangeText={setApplicantName} required error={errors.applicantName} />
-            <InputField label="Email ID" value={formData.emailId} onChangeText={setEmailId} keyboardType="email-address" />
             <InputField label="WhatsApp Number" value={formData.whatsappNumber} onChangeText={setWhatsappNumber} required error={errors.whatsappNumber} keyboardType="phone-pad" />
             <InputField label="Program" value={formData.program} onChangeText={setProgram} required error={errors.program} />
             <SelectField label="Gender" value={formData.gender} onPress={openGender} required error={errors.gender} />
@@ -609,11 +571,8 @@ export default function EditLeadScreen() {
           </AccordionSection>
 
           <AccordionSection title="Family & Address Details" defaultExpanded={false} hasError={section2HasError}>
-            <InputField label="Father's Full Name" value={formData.fatherFullName} onChangeText={setFatherFullName} />
-            <InputField label="Father's Mobile" value={formData.fatherMobile} onChangeText={setFatherMobile} keyboardType="phone-pad" />
             <SelectField label="State" value={formData.state} onPress={openState} required error={errors.state} />
-            <InputField label="City" value={formData.city} onChangeText={setCity} />
-            <InputField label="Address" value={formData.address} onChangeText={setAddress} multiline />
+            <InputField label="City" value={formData.city} onChangeText={(v) => updateField('city', v)} />
           </AccordionSection>
 
           <AccordionSection title="Source Details" defaultExpanded={false} hasError={section3HasError}>
@@ -629,8 +588,6 @@ export default function EditLeadScreen() {
       <SelectModal visible={activeModal === 'state'} onDismiss={closeModal} title="Select State" options={INDIAN_STATES} selected={formData.state} onSelect={setState} />
       <SelectModal visible={activeModal === 'channel'} onDismiss={closeModal} title="Select Channel" options={CHANNEL_OPTIONS} selected={formData.channel} onSelect={setChannel} />
       <SelectModal visible={activeModal === 'source'} onDismiss={closeModal} title="Select Source" options={SOURCE_OPTIONS} selected={formData.source} onSelect={setSource} />
-      <SelectModal visible={activeModal === 'campaign'} onDismiss={closeModal} title="Select Campaign" options={CAMPAIGN_OPTIONS} selected={formData.campaign} onSelect={setCampaign} />
-      <MultiSelectModal visible={activeModal === 'medium'} onDismiss={closeModal} title="Select Medium" options={MEDIUM_OPTIONS} selected={formData.medium} onSelect={setMedium} />
     </SafeAreaView>
   );
 }

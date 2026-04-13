@@ -68,6 +68,13 @@ export default function MainLayout() {
           title: 'Help',
         }}
       />
+      <Drawer.Screen
+        name="sync"
+        options={{
+          drawerItemStyle: { display: 'none' },
+          title: 'Sync Data',
+        }}
+      />
     </Drawer>
   );
 }

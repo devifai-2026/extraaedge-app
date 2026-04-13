@@ -149,8 +149,8 @@ export function CustomDrawerContent(props: any) {
           <MenuTab 
             label="Sync Data" 
             icon="sync" 
-            isActive={false} 
-            onPress={() => {}}
+            isActive={pathname === '/sync'} 
+            onPress={() => router.push('/sync' as any)}
           />
           <MenuTab 
             label="Self Test" 

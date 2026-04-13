@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { 
   StyleSheet, 
   ScrollView, 
-  View, 
-  SafeAreaView 
+  View
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
   Appbar, 
   Card, 
@@ -12,7 +12,6 @@ import {
   List, 
   Badge, 
   Text, 
-  FAB, 
   Avatar,
   useTheme,
   Divider
@@ -41,7 +40,7 @@ export default function DashboardScreen() {
   return (
     <SafeAreaView style={styles.container}>
       {/* Top Navigation Bar */}
-      <Appbar.Header style={styles.header} elevated>
+      <Appbar.Header style={styles.header}>
         <Appbar.Action 
             icon="menu" 
             onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())} 
@@ -151,14 +150,6 @@ export default function DashboardScreen() {
 
         <View style={styles.spacer} />
       </ScrollView>
-
-      {/* Floating Action Button */}
-      <FAB
-        icon="plus"
-        style={styles.fab}
-        onPress={() => console.log('Add pressed')}
-        color="#FFFFFF"
-      />
     </SafeAreaView>
   );
 }
@@ -170,7 +161,8 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#FFFFFF',
-    elevation: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
   headerTitle: {
     fontWeight: '800',

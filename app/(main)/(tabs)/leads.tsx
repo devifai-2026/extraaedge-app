@@ -7,19 +7,18 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   FlatList,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
   View
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Appbar,
   Avatar,
   Button,
   Card,
   Divider,
-  FAB,
   IconButton,
   List,
   Menu,
@@ -314,7 +313,7 @@ export default function LeadsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       {/* Top Navigation Bar */}
-      <Appbar.Header style={styles.header} elevated>
+      <Appbar.Header style={styles.header}>
         <Appbar.Action
           icon="menu"
           onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
@@ -501,14 +500,6 @@ export default function LeadsScreen() {
         />
       )}
 
-      {/* Floating Action Button */}
-      <FAB
-        icon="plus"
-        style={styles.fab}
-        color="#FFFFFF"
-        onPress={() => console.log('Add Lead')}
-      />
-
       {/* Bottom Sheets */}
       {renderBottomSheet(
         datasetSheetVisible,
@@ -674,12 +665,14 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#FFFFFF',
-    elevation: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
   headerTitle: {
-    fontWeight: '800',
+    fontWeight: '900',
     fontSize: 22,
     color: '#000000',
+    letterSpacing: -0.5,
   },
   searchRow: {
     flexDirection: 'row',
@@ -792,6 +785,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     overflow: 'hidden',
+    borderWidth: 1.2,
+    borderColor: '#F1F3F5',
   },
   cardRow: {
     flexDirection: 'row',
@@ -856,6 +851,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
+    borderWidth: 1.2,
+    borderColor: '#F1F3F5',
   },
   gridCardContent: {
     padding: 16,
@@ -889,7 +886,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: Theme.colors.primary,
     borderRadius: 30,
-    elevation: 6,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   bottomSheet: {
     backgroundColor: 'white',
