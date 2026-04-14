@@ -271,34 +271,24 @@ export default function UpdateStageScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       {/* ── Header ── */}
-      <Appbar.Header style={styles.header} elevated>
+      <Appbar.Header style={styles.appbar}>
         <Appbar.BackAction
           onPress={() => router.back()}
-          color={Theme.colors.secondary}
+          color="#000000"
         />
         <Appbar.Content title="Update Stage" titleStyle={styles.headerTitle} />
         <TouchableOpacity
-          style={styles.updateBtn}
+          style={styles.headerActionPill}
           onPress={handleUpdate}
-          activeOpacity={0.82}
+          activeOpacity={0.8}
         >
-          <Text style={styles.updateBtnText}>Update</Text>
+          <Text style={styles.headerActionText}>Update</Text>
         </TouchableOpacity>
       </Appbar.Header>
 
-      {/* ── Lead name badge ── */}
-      {lead?.name && (
-        <View style={styles.leadNameBar}>
-          <View style={styles.leadAvatarSmall}>
-            <Text style={styles.leadAvatarText}>
-              {lead.name.substring(0, 2).toUpperCase()}
-            </Text>
-          </View>
-          <Text style={styles.leadNameText}>{lead.name}</Text>
-        </View>
-      )}
+
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -449,177 +439,120 @@ export default function UpdateStageScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F6F8',
+    backgroundColor: '#FFFFFF',
   },
 
   // ── Header ──
-  header: {
+  appbar: {
     backgroundColor: '#FFFFFF',
-    elevation: 4,
-  },
-  headerTitle: {
-    fontWeight: '800',
-    fontSize: 20,
-    color: Theme.colors.secondary,
-  },
-  updateBtn: {
-    backgroundColor: Theme.colors.primary,
-    paddingHorizontal: 20,
-    paddingVertical: 9,
-    borderRadius: 22,
-    marginRight: 12,
-    ...Platform.select({
-      ios: {
-        shadowColor: Theme.colors.primary,
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.4,
-        shadowRadius: 6,
-      },
-      android: { elevation: 4 },
-    }),
-  },
-  updateBtnText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 14,
-    letterSpacing: 0.3,
-  },
-
-  // ── Lead Name Bar ──
-  leadNameBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
-    gap: 12,
   },
-  leadAvatarSmall: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: Theme.colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#000000',
+    letterSpacing: -0.5,
   },
-  leadAvatarText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  leadNameText: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: Theme.colors.secondary,
-    letterSpacing: -0.2,
-  },
-
-  // ── Scroll ──
-  scrollView: {
-    flex: 1,
+  headerActionPill: {
+    backgroundColor: '#FEECEB',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 48,
-    gap: 14,
+    paddingBottom: 40,
+    gap: 16,
   },
 
   // ── Section Card ──
   sectionCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 18,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 6,
-      },
-      android: { elevation: 2 },
-    }),
+    overflow: 'hidden',
+    borderWidth: 1.2,
+    borderColor: '#F1F3F4',
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 18,
-    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
   },
   sectionAccent: {
     width: 4,
     height: 18,
     borderRadius: 2,
     backgroundColor: Theme.colors.primary,
+    marginRight: 10,
   },
   sectionLabel: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#9E9E9E',
+    fontWeight: '800',
+    color: Theme.colors.primary,
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 0.5,
+    flex: 1,
   },
 
   // ── Field ──
   fieldGroup: {
-    marginBottom: 18,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
   fieldLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#111111',
-    marginBottom: 8,
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#444444',
+    marginBottom: 6,
+    marginLeft: 2,
   },
   required: {
     color: Theme.colors.primary,
-    fontWeight: '800',
   },
   selectField: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F5F6F8',
+    backgroundColor: '#F8F9FA',
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#EEEEEE',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    minHeight: 52,
+    borderColor: '#E8EAED',
+    paddingHorizontal: 14,
+    height: 52,
   },
   fieldError: {
     borderColor: Theme.colors.primary,
-    backgroundColor: 'rgba(229,57,53,0.04)',
+    backgroundColor: 'rgba(229,57,53,0.03)',
   },
   selectText: {
     flex: 1,
     fontSize: 15,
-    fontWeight: '600',
     color: '#111111',
     marginRight: 8,
   },
   placeholderText: {
     color: '#BDBDBD',
-    fontWeight: '500',
   },
   errorText: {
-    marginTop: 6,
+    marginTop: 4,
+    marginLeft: 4,
     fontSize: 12,
     color: Theme.colors.primary,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   textArea: {
-    backgroundColor: '#F5F6F8',
+    backgroundColor: '#F8F9FA',
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#EEEEEE',
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 14,
+    borderColor: '#E8EAED',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     fontSize: 15,
     color: '#111111',
-    minHeight: 120,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    minHeight: 100,
   },
 
   // ── Bottom Sheet ──

@@ -319,8 +319,8 @@ export default function LeadsScreen() {
           onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
         />
         <Appbar.Content title="Leads" titleStyle={styles.headerTitle} />
-        <Appbar.Action icon="phone-outline" onPress={() => { }} />
-        <Appbar.Action icon="bell-outline" onPress={() => { }} />
+        <Appbar.Action icon="phone-outline" onPress={() => router.push('/(main)/recent-calls')} />
+        <Appbar.Action icon="bell-outline" onPress={() => router.push('/(main)/notifications')} />
         
       </Appbar.Header>
 

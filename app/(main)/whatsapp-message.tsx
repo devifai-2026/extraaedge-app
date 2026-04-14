@@ -267,17 +267,17 @@ export default function WhatsAppMessageScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       {/* ── Top Navigation Bar ─────────────────────────────────────── */}
-      <Appbar.Header style={styles.header} elevated>
+      <Appbar.Header style={styles.appbar}>
         <Appbar.BackAction onPress={() => router.back()} color="#000000" />
         <Appbar.Content title="WhatsApp Lead" titleStyle={styles.headerTitle} />
         <TouchableOpacity
-          style={styles.sendBtn}
+          style={styles.headerActionPill}
           onPress={handleSend}
-          activeOpacity={0.82}
+          activeOpacity={0.8}
         >
-          <Text style={styles.sendBtnText}>Send</Text>
+          <Text style={styles.headerActionText}>Send</Text>
         </TouchableOpacity>
       </Appbar.Header>
 
@@ -291,22 +291,7 @@ export default function WhatsAppMessageScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* ── Lead Name Banner ──────────────────────────────────────── */}
-          {lead && (
-            <View style={styles.leadNameBlock}>
-              <View style={styles.leadBadgeRow}>
-                <View style={styles.whatsappIconWrap}>
-                  <MaterialCommunityIcons
-                    name="whatsapp"
-                    size={18}
-                    color="#25D366"
-                  />
-                </View>
-                <Text style={styles.leadName}>{leadName}</Text>
-              </View>
-              <View style={styles.leadNameDivider} />
-            </View>
-          )}
+
 
           {/* ── Section 1: Mode Toggle ────────────────────────────────── */}
           <View style={styles.section}>
@@ -514,41 +499,32 @@ export default function WhatsAppMessageScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#FFFFFF',
   },
 
   // ── Header ─────────────────────────────────────────────────────
-  header: {
+  appbar: {
     backgroundColor: '#FFFFFF',
-    elevation: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
   headerTitle: {
-    fontWeight: '800',
     fontSize: 20,
+    fontWeight: '900',
     color: '#000000',
-    letterSpacing: -0.3,
+    letterSpacing: -0.5,
   },
-  sendBtn: {
-    backgroundColor: Theme.colors.primary,
-    paddingHorizontal: 20,
-    paddingVertical: 9,
-    borderRadius: 22,
-    marginRight: 12,
-    ...Platform.select({
-      ios: {
-        shadowColor: Theme.colors.primary,
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.4,
-        shadowRadius: 6,
-      },
-      android: { elevation: 4 },
-    }),
+  headerActionPill: {
+    backgroundColor: '#FEECEB',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
   },
-  sendBtnText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 15,
-    letterSpacing: 0.2,
+  headerActionText: {
+    color: Theme.colors.primary,
+    fontWeight: '800',
+    fontSize: 13,
   },
 
   // ── Scroll ──────────────────────────────────────────────────────
@@ -556,56 +532,29 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 48,
-  },
-
-  // ── Lead Name Banner ────────────────────────────────────────────
-  leadNameBlock: {
-    marginTop: 20,
-    marginBottom: 8,
-  },
-  leadBadgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  whatsappIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: 'rgba(37,211,102,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
-  },
-  leadName: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#000000',
-    letterSpacing: -0.4,
-  },
-  leadNameDivider: {
-    marginTop: 14,
-    height: 1,
-    backgroundColor: '#EEEEEE',
+    padding: 16,
+    paddingBottom: 40,
+    gap: 16,
   },
 
   // ── Section ──────────────────────────────────────────────────────
   section: {
-    marginTop: 28,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1.2,
+    borderColor: '#F1F3F4',
+    padding: 16,
   },
   fieldLabel: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#424242',
-    marginBottom: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    fontWeight: '600',
+    color: '#444444',
+    marginBottom: 6,
+    marginLeft: 2,
   },
   required: {
     color: Theme.colors.primary,
-    fontWeight: '800',
   },
 
   // ── Segmented Control ────────────────────────────────────────────

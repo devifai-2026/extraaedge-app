@@ -151,44 +151,24 @@ export default function AddMilestoneScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-
+    <SafeAreaView style={styles.container} edges={['top']}>
       {/* ─── Header ─── */}
-      <Appbar.Header style={styles.header} elevated>
+      <Appbar.Header style={styles.appbar}>
         <Appbar.BackAction
           onPress={() => router.back()}
-          color={Theme.colors.secondary}
+          color="#000000"
         />
         <Appbar.Content title="Add Milestone" titleStyle={styles.headerTitle} />
         <TouchableOpacity
-          style={styles.saveBtn}
+          style={styles.headerActionPill}
           onPress={handleSave}
-          activeOpacity={0.82}
+          activeOpacity={0.8}
         >
-          <Text style={styles.saveBtnText}>Save</Text>
+          <Text style={styles.headerActionText}>Save</Text>
         </TouchableOpacity>
       </Appbar.Header>
 
-      {/* ─── Lead name badge ─── */}
-      {lead?.name && (
-        <View style={styles.leadNameBar}>
-          <View style={styles.leadAvatar}>
-            <Text style={styles.leadAvatarText}>
-              {lead.name.substring(0, 2).toUpperCase()}
-            </Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.leadNameText} numberOfLines={1}>{lead.name}</Text>
-            {lead.program && (
-              <Text style={styles.leadSubText} numberOfLines={1}>{lead.program}</Text>
-            )}
-          </View>
-          <View style={styles.leadBadge}>
-            <MaterialCommunityIcons name="flag-variant" size={12} color={Theme.colors.primary} />
-            <Text style={styles.leadBadgeText}>Milestone</Text>
-          </View>
-        </View>
-      )}
+
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -304,41 +284,32 @@ export default function AddMilestoneScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F6F8',
+    backgroundColor: '#FFFFFF',
   },
 
   // ── Header ──
-  header: {
+  appbar: {
     backgroundColor: '#FFFFFF',
-    elevation: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
   headerTitle: {
-    fontWeight: '800',
     fontSize: 20,
-    color: Theme.colors.secondary,
-    letterSpacing: -0.3,
+    fontWeight: '900',
+    color: '#000000',
+    letterSpacing: -0.5,
   },
-  saveBtn: {
-    backgroundColor: Theme.colors.primary,
-    paddingHorizontal: 20,
-    paddingVertical: 9,
-    borderRadius: 22,
-    marginRight: 12,
-    ...Platform.select({
-      ios: {
-        shadowColor: Theme.colors.primary,
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.42,
-        shadowRadius: 6,
-      },
-      android: { elevation: 4 },
-    }),
+  headerActionPill: {
+    backgroundColor: '#FEECEB',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
   },
-  saveBtnText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 14,
-    letterSpacing: 0.3,
+  headerActionText: {
+    color: Theme.colors.primary,
+    fontWeight: '800',
+    fontSize: 13,
   },
 
   // ── Lead Name Bar ──
@@ -392,29 +363,22 @@ const styles = StyleSheet.create({
     color: Theme.colors.primary,
     letterSpacing: 0.2,
   },
-
   // ── Scroll ──
   scrollView: { flex: 1 },
   scrollContent: {
     padding: 16,
-    paddingBottom: 52,
-    gap: 14,
+    paddingBottom: 40,
+    gap: 16,
   },
 
   // ── Section Card ──
   sectionCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 18,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 6,
-      },
-      android: { elevation: 2 },
-    }),
+    overflow: 'hidden',
+    borderWidth: 1.2,
+    borderColor: '#F1F3F4',
+    padding: 16,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -429,23 +393,23 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.primary,
   },
   sectionLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#9E9E9E',
+    fontSize: 13,
+    fontWeight: '800',
+    color: Theme.colors.primary,
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
 
   // ── Fields ──
   fieldLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#111111',
-    marginBottom: 10,
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#444444',
+    marginBottom: 6,
+    marginLeft: 2,
   },
   required: {
     color: Theme.colors.primary,
-    fontWeight: '800',
   },
 
   // Date picker field

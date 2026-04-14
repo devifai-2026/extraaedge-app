@@ -207,9 +207,9 @@ export default function ReferLeadScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       {/* ── Top Navigation Bar ──────────────────────────────────── */}
-      <Appbar.Header style={styles.header} elevated>
+      <Appbar.Header style={styles.appbar}>
         <Appbar.BackAction
           onPress={() => router.back()}
           color="#000000"
@@ -219,11 +219,11 @@ export default function ReferLeadScreen() {
           titleStyle={styles.headerTitle}
         />
         <TouchableOpacity
-          style={styles.referBtn}
+          style={styles.headerActionPill}
           onPress={handleRefer}
-          activeOpacity={0.82}
+          activeOpacity={0.8}
         >
-          <Text style={styles.referBtnText}>Refer</Text>
+          <Text style={styles.headerActionText}>Refer</Text>
         </TouchableOpacity>
       </Appbar.Header>
 
@@ -237,13 +237,7 @@ export default function ReferLeadScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* ── Lead Name Display ──────────────────────────────────── */}
-          {lead && (
-            <View style={styles.leadNameBlock}>
-              <Text style={styles.leadName}>{lead.name}</Text>
-              <View style={styles.leadNameDivider} />
-            </View>
-          )}
+
 
           {/* ── Section 1 : Select Referred To ────────────────────── */}
           <View style={styles.section}>
@@ -324,150 +318,102 @@ export default function ReferLeadScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#FFFFFF',
   },
 
   // ── Header ───────────────────────────────────────────────────
-  header: {
+  appbar: {
     backgroundColor: '#FFFFFF',
-    elevation: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
   headerTitle: {
-    fontWeight: '800',
     fontSize: 20,
+    fontWeight: '900',
     color: '#000000',
-    letterSpacing: -0.3,
+    letterSpacing: -0.5,
   },
-  referBtn: {
-    backgroundColor: Theme.colors.primary,
-    paddingHorizontal: 20,
-    paddingVertical: 9,
-    borderRadius: 22,
-    marginRight: 12,
-    ...Platform.select({
-      ios: {
-        shadowColor: Theme.colors.primary,
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.4,
-        shadowRadius: 6,
-      },
-      android: { elevation: 4 },
-    }),
+  headerActionPill: {
+    backgroundColor: '#FEECEB',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
   },
-  referBtnText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 15,
-    letterSpacing: 0.2,
-  },
-
-  // ── Scroll ────────────────────────────────────────────────────
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 40,
-  },
-
-  // ── Lead Name ─────────────────────────────────────────────────
-  leadNameBlock: {
-    marginTop: 20,
-    marginBottom: 8,
-  },
-  leadName: {
-    fontSize: 22,
+  headerActionText: {
+    color: Theme.colors.primary,
     fontWeight: '800',
-    color: '#000000',
-    letterSpacing: -0.4,
+    fontSize: 13,
   },
-  leadNameDivider: {
-    marginTop: 14,
-    height: 1,
-    backgroundColor: '#EEEEEE',
+
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 40,
+    gap: 16,
   },
 
   // ── Section ────────────────────────────────────────────────────
   section: {
-    marginTop: 28,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1.2,
+    borderColor: '#F1F3F4',
+    padding: 16,
   },
   fieldLabel: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#424242',
-    marginBottom: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    fontWeight: '600',
+    color: '#444444',
+    marginBottom: 6,
+    marginLeft: 2,
   },
   required: {
     color: Theme.colors.primary,
-    fontWeight: '800',
   },
 
   // ── Dropdown ───────────────────────────────────────────────────
   dropdownField: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8F9FA',
     borderWidth: 1.5,
-    borderColor: '#EEEEEE',
+    borderColor: '#E8EAED',
     borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 15,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.04,
-        shadowRadius: 3,
-      },
-      android: { elevation: 1 },
-    }),
+    paddingHorizontal: 14,
+    height: 52,
   },
   dropdownFieldError: {
     borderColor: Theme.colors.primary,
-    borderWidth: 1.5,
+    backgroundColor: 'rgba(229,57,53,0.03)',
   },
   dropdownValue: {
     flex: 1,
     fontSize: 15,
-    fontWeight: '600',
-    color: '#000000',
+    color: '#111111',
   },
   dropdownPlaceholder: {
     color: '#BDBDBD',
-    fontWeight: '400',
   },
   errorText: {
     fontSize: 12,
     color: Theme.colors.primary,
     fontWeight: '500',
-    marginTop: 6,
+    marginTop: 4,
     marginLeft: 4,
   },
 
   // ── Textarea ────────────────────────────────────────────────────
   textarea: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8F9FA',
     borderWidth: 1.5,
-    borderColor: '#EEEEEE',
+    borderColor: '#E8EAED',
     borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     fontSize: 15,
-    color: '#000000',
-    minHeight: 130,
-    lineHeight: 22,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.04,
-        shadowRadius: 3,
-      },
-      android: { elevation: 1 },
-    }),
+    color: '#111111',
+    minHeight: 120,
   },
   charCount: {
     fontSize: 11,

@@ -75,6 +75,20 @@ export default function MainLayout() {
           title: 'Sync Data',
         }}
       />
+      <Drawer.Screen
+        name="recent-calls"
+        options={{
+          drawerItemStyle: { display: 'none' },
+          title: 'Recent Calls',
+        }}
+      />
+      <Drawer.Screen
+        name="notifications"
+        options={{
+          drawerItemStyle: { display: 'none' },
+          title: 'Notifications',
+        }}
+      />
     </Drawer>
   );
 }

@@ -18,9 +18,11 @@ import {
 } from 'react-native-paper';
 import { Theme } from '@/constants/theme';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 
 export default function DashboardScreen() {
   const navigation = useNavigation();
+  const router = useRouter();
   const [isClickToCallEnabled, setIsClickToCallEnabled] = useState(true);
   const [isWhatsAppEnabled, setIsWhatsAppEnabled] = useState(false);
   const [leadsExpanded, setLeadsExpanded] = useState(true);
@@ -49,8 +51,8 @@ export default function DashboardScreen() {
           title="Dashboard" 
           titleStyle={styles.headerTitle} 
         />
-        <Appbar.Action icon="phone-outline" onPress={() => {}} />
-        <Appbar.Action icon="bell-outline" onPress={() => {}} />
+        <Appbar.Action icon="phone-outline" onPress={() => router.push('/(main)/recent-calls')} />
+        <Appbar.Action icon="bell-outline" onPress={() => router.push('/(main)/notifications')} />
       </Appbar.Header>
 
       <ScrollView 
@@ -165,9 +167,10 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F0F0F0',
   },
   headerTitle: {
-    fontWeight: '800',
     fontSize: 22,
-    color: Theme.colors.secondary,
+    fontWeight: '900',
+    color: '#000000',
+    letterSpacing: -0.5,
   },
   content: {
     flex: 1,

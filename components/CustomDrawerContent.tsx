@@ -102,7 +102,10 @@ export function CustomDrawerContent(props: any) {
           
           <TouchableOpacity 
             style={styles.notificationBtn}
-            onPress={() => Haptics.selectionAsync()}
+            onPress={() => {
+              Haptics.selectionAsync();
+              router.push('/notifications');
+            }}
           >
             <MaterialCommunityIcons name="bell-outline" size={22} color="#5F6368" />
             <View style={styles.badge} />
